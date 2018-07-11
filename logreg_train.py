@@ -6,7 +6,7 @@
 #    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/10 09:51:06 by msukhare          #+#    #+#              #
-#    Updated: 2018/07/11 14:32:58 by msukhare         ###   ########.fr        #
+#    Updated: 2018/07/11 17:10:46 by msukhare         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -44,31 +44,49 @@ def scale_feature(data):
     return (X_scale)
 
 def hypo(X, i, thetas, th):
-    return (1 / (1 + np.exp(-thetas[th - 1].dot(X[i]))))
+    return (1 / (1 + np.exp(-thetas[th].dot(X[i]))))
 
 def cost_function(X, Y, thetas, nb_theta):
-    th = 1
+    th = 0
     row = X.shape[0]
-    res = 0
+    results = []
     for th in range(int(nb_theta)):
         i = 0
         res = 0
         while (i < row):
-            if (Y[i] == th):
-                res += np.log(hypo(X, i, thetas, th))
+            if (Y[i] == (th + 1)):
+                res += -np.log(hypo(X, i, thetas, th))
             else:
-                res += np.log((1 - hypo(X, i, thetas, th)))
+                res += -np.log((1 - hypo(X, i, thetas, th)))
             i += 1
-        print(res)
-    return (res)
+        results.append(-(1 / row) * res)
+    return (results)
 
-#def gradient_descent(X, Y, thetas, tmp_thetas, nb_theta):
-    
+def somme_for_grad(X, Y, thetas, th, feat):
+    row = X.shape[0]
+    res = 0
+    for i in range(row):
+        if (Y[i][0] == (th + 1)):
+            res += ((hypo(X, i, thetas, th) - 1) * X[i][feat])
+        else:
+            res += ((hypo(X, i, thetas, th) - 0) * X[i][feat])
+    return ((0.03 / row) * res)
+
+def gradient_descent(X, Y, thetas, tmp_thetas, nb_theta):
+    for th in range(int(nb_theta)):
+        col = tmp_thetas.shape[1]
+        for i in range(col):
+            tmp_thetas[th][i] = thetas[th][i] - somme_for_grad(X, Y, thetas, th, i)
+    for th in range(int(nb_theta)):
+        col = tmp_thetas.shape[1]
+        for i in range(col):
+            thetas[th][i] = tmp_thetas[th][i]
 
 def make_predi(X, Y, thetas, tmp_thetas, nb_theta):
-    for i in range(1000):
+    for i in range(20):
         cost_res = cost_function(X, Y, thetas, nb_theta)
         gradient_descent(X, Y, thetas, tmp_thetas, nb_theta)
+        print(i)
     print(thetas)
 
 def main():
@@ -81,7 +99,7 @@ def main():
     nb_theta = max(Y)
     thetas = np.zeros((int(nb_theta), data.shape[1]), dtype=float)
     tmp_thetas = np.zeros((int(nb_theta), data.shape[1]), dtype=float)
-    make_predi(X_scale, Y, thetas, tmp_thetas, (nb_theta + 1))
+    make_predi(X_scale, Y, thetas, tmp_thetas, nb_theta)
 
 if __name__ == "__main__":
     main()
