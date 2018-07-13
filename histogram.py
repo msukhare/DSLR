@@ -50,7 +50,7 @@ def main():
     if (len(sys.argv) >= 3):
         sys.exit("too much file")
     data, keys = read_file()
-    i = 16
+    i = 6
     first_h, sec_h, th_h, four_h = split_data_by_house(data, keys[i], keys[1])
     put_histogramme(first_h, sec_h, th_h, four_h, keys[i])
 
