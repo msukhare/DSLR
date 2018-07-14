@@ -6,7 +6,7 @@
 #    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/10 09:51:06 by msukhare          #+#    #+#              #
-#    Updated: 2018/07/13 13:29:29 by msukhare         ###   ########.fr        #
+#    Updated: 2018/07/14 18:30:19 by kemar            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
+from math import floor
 
 # #---> Algo WITHOUT VECTORIZATION
 
@@ -46,8 +47,8 @@ def scale_feature(data):
         i += 1
     return (X_scale)
 
-#def hypo(X, i, thetas, th):
-#    return (1 / (1 + np.exp(-thetas[th].dot(X[i]))))
+def hypo(X, i, thetas, th):
+    return (1 / (1 + np.exp(-thetas[th].dot(X[i]))))
 
 def g(X, thetas, th):
     tmp = np.reshape(thetas[th], (14, 1))
@@ -71,6 +72,8 @@ def cost_function(X, Y, thetas, nb_theta):
         tmp = ((1 / row) * get_cost(X, thetas, hs, new_y))
         ret.append(tmp[0][0])
     return (ret)
+
+#def cost_function(X, Y, thetas, nb_theta):
 #    th = 0
 #    row = X.shape[0]
 #    results = []
@@ -96,7 +99,7 @@ def cost_function(X, Y, thetas, nb_theta):
 #            res += ((hypo(X, i, thetas, th) - 0) * X[i][j])
 #    return (((0.03 / row) * res))
 
-def gradient_descent(X, Y, thetas, tmp_thetas, nb_theta):
+def gradient_descent(X, Y, thetas, nb_theta):
     th = 0
     row = X.shape[0]
     for th in range(int(nb_theta)):
@@ -106,6 +109,8 @@ def gradient_descent(X, Y, thetas, tmp_thetas, nb_theta):
         size = tmp.shape[0]
         for i in range(int(size)):
             thetas[th][i] = tmp[i][0]
+
+#def gradient_descent(X, Y, thetas, tmp_thetas, nb_theta):
    # th = 0
    # for th in range(int(nb_theta)):
    #     col = thetas.shape[1]
@@ -116,18 +121,39 @@ def gradient_descent(X, Y, thetas, tmp_thetas, nb_theta):
    #     for j in range(int(col)):
    #         thetas[th][j] = tmp_thetas[th][j]
 
-def make_predi(X, Y, thetas, tmp_thetas, nb_theta):
-    cost_res = []
+def make_pourcent_predi(X, Y, thetas, nb_theta):
+    row = X.shape[0]
+    for i in range(int(row)):
+        print(Y[i])
+        for hs in range(int(nb_theta)):
+            print(hypo(X, i, thetas, hs))
+
+def make_predi(X, Y, thetas, nb_theta):
+    cost_res1 = []
+    cost_res2 = []
+    cost_res3 = []
+    cost_res4 = []
     i = 0
     index = []
-    for i in range(200):
-     #   tmp = cost_function(X, Y, thetas, nb_theta)
-    #    cost_res.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
-        #index.append(i)
-        gradient_descent(X, Y, thetas, tmp_thetas, nb_theta)
+    row = X.shape[0]
+    X_train, X_cost, X_test = X[ : floor(row * 0.70)], X[floor(row * 0.70) : floor(row * 0.85)], X[floor(row * 0.85) :]
+    Y_train, Y_cost, Y_test = Y[ : floor(row * 0.70)], Y[floor(row * 0.70) : floor(row * 0.85)], Y[floor(row * 0.85) :]
+    for i in range(1000):
+        tmp = cost_function(X_cost, Y_cost, thetas, nb_theta)
+        #cost_res.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
+        cost_res1.append(tmp[0])
+        cost_res2.append(tmp[1])
+        cost_res3.append(tmp[2])
+        cost_res4.append(tmp[3])
+        index.append(i)
+        gradient_descent(X_train, Y_train, thetas, nb_theta)
     #plt.plot(index, cost_res)
-    #plt.show()
-    print(thetas)
+    plt.plot(index, cost_res1)
+    plt.plot(index, cost_res2)
+    plt.plot(index, cost_res3)
+    plt.plot(index, cost_res4)
+    plt.show()
+    make_pourcent_predi(X_test, Y_test, thetas, nb_theta)
 
 def main():
     if (len(sys.argv) <= 1):
@@ -138,8 +164,8 @@ def main():
     X_scale = scale_feature(data).transpose()
     nb_theta = max(Y)
     thetas = np.zeros((int(nb_theta), data.shape[1]), dtype=float)
-    tmp_thetas = np.zeros((int(nb_theta), data.shape[1]), dtype=float)
-    make_predi(X_scale, Y, thetas, tmp_thetas, nb_theta)
+#    tmp_thetas = np.zeros((int(nb_theta), data.shape[1]), dtype=float)
+    make_predi(X_scale, Y, thetas, nb_theta)
 
 if __name__ == "__main__":
     main()
