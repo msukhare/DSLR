@@ -6,7 +6,7 @@
 #    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/10 09:51:06 by msukhare          #+#    #+#              #
-#    Updated: 2018/07/14 18:30:19 by kemar            ###   ########.fr        #
+#    Updated: 2018/07/17 12:12:46 by kemar            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -121,39 +121,62 @@ def gradient_descent(X, Y, thetas, nb_theta):
    #     for j in range(int(col)):
    #         thetas[th][j] = tmp_thetas[th][j]
 
-def make_pourcent_predi(X, Y, thetas, nb_theta):
+def get_quality_theta(X, Y, thetas, nb_theta):
     row = X.shape[0]
-    for i in range(int(row)):
-        print(Y[i])
-        for hs in range(int(nb_theta)):
-            print(hypo(X, i, thetas, hs))
+    precision = 0
+    recall = 0
+    for hs in range(int(nb_theta)):
+        vp = 0
+        fp = 0
+        fn = 0
+        for i in range(int(row)):
+            tmp = hypo(X, i, thetas, hs)
+            if ((hs + 1) == Y[i][0] and tmp >= 0.5):
+                vp += 1
+            elif ((hs + 1) == Y[i][0] and tmp < 0.5):
+                fp += 1
+            if (tmp >= 0.5 and (hs + 1) != Y[i][0]):
+                fn += 1
+        print(vp, fp, fn, (vp + fp), (vp + fn))
+        precision += (vp / (vp + fp))
+        recall += (vp / (vp + fn))
+    precision = ((1 / nb_theta) * precision)
+    recall = ((1 / nb_theta) * recall)
+    print("precision :", precision)
+    print("recall :", recall)
+    print("f1 :", ((2 * (precision * recall)) / (precision + recall)))
 
 def make_predi(X, Y, thetas, nb_theta):
-    cost_res1 = []
+    cost_res = []
     cost_res2 = []
-    cost_res3 = []
-    cost_res4 = []
+    #cost_res1 = []
+    #cost_res2 = []
+    #cost_res3 = []
+    #cost_res4 = []
     i = 0
     index = []
     row = X.shape[0]
     X_train, X_cost, X_test = X[ : floor(row * 0.70)], X[floor(row * 0.70) : floor(row * 0.85)], X[floor(row * 0.85) :]
     Y_train, Y_cost, Y_test = Y[ : floor(row * 0.70)], Y[floor(row * 0.70) : floor(row * 0.85)], Y[floor(row * 0.85) :]
-    for i in range(1000):
+    for i in range(815):#815
         tmp = cost_function(X_cost, Y_cost, thetas, nb_theta)
-        #cost_res.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
-        cost_res1.append(tmp[0])
-        cost_res2.append(tmp[1])
-        cost_res3.append(tmp[2])
-        cost_res4.append(tmp[3])
+        cost_res.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
+        tmp = cost_function(X_train, Y_train, thetas, nb_theta)
+        cost_res2.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
+        #cost_res1.append(tmp[0])
+        #cost_res2.append(tmp[1])
+       # cost_res3.append(tmp[2])
+       # cost_res4.append(tmp[3])
         index.append(i)
         gradient_descent(X_train, Y_train, thetas, nb_theta)
-    #plt.plot(index, cost_res)
-    plt.plot(index, cost_res1)
-    plt.plot(index, cost_res2)
-    plt.plot(index, cost_res3)
-    plt.plot(index, cost_res4)
+    plt.plot(index, cost_res, color='red')
+    plt.plot(index, cost_res2, color='green')
+   # plt.plot(index, cost_res1)
+   # plt.plot(index, cost_res2)
+   # plt.plot(index, cost_res3)
+   # plt.plot(index, cost_res4)
     plt.show()
-    make_pourcent_predi(X_test, Y_test, thetas, nb_theta)
+    get_quality_theta(X_test, Y_test, thetas, nb_theta)
 
 def main():
     if (len(sys.argv) <= 1):
