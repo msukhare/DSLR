@@ -6,7 +6,7 @@
 #    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/10 09:51:06 by msukhare          #+#    #+#              #
-#    Updated: 2018/07/17 12:12:46 by kemar            ###   ########.fr        #
+#    Updated: 2018/07/20 16:52:08 by msukhare         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -43,15 +43,29 @@ def scale_feature(data):
     i = 0
     for key in data:
         for j in range(int(desc[key]['count'])):
-            X_scale[i][j] = data[key][j] / (desc[key]['max'] - desc[key]['min'])
+            X_scale[i][j] = (data[key][j] - desc[key]['min']) / (desc[key]['max'] - desc[key]['min'])
         i += 1
     return (X_scale)
 
 def hypo(X, i, thetas, th):
     return (1 / (1 + np.exp(-thetas[th].dot(X[i]))))
 
+def get_max(mat, j, row):
+    to_ret = mat[0][j]
+    for i in range(int(row)):
+        if (to_ret <= mat[i][j]):
+            to_ret = mat[i][j]
+    return (to_ret)
+
+def get_min(mat, j, row):
+    to_ret = mat[0][j]
+    for i in range(int(row)):
+        if (to_ret >= mat[i][j]):
+            to_ret = mat[i][j]
+    return (to_ret)
+
 def g(X, thetas, th):
-    tmp = np.reshape(thetas[th], (14, 1))
+    tmp = np.reshape(thetas[th], (28, 1))
     return (1 / (1 + np.e**-(X.dot(tmp))))
 
 def get_new_y(Y, th, row):
@@ -103,7 +117,7 @@ def gradient_descent(X, Y, thetas, nb_theta):
     th = 0
     row = X.shape[0]
     for th in range(int(nb_theta)):
-        tmp_t = np.reshape(thetas[th], (14, 1))
+        tmp_t = np.reshape(thetas[th], (28, 1))
         tmp_Y = get_new_y(Y, th, row)
         tmp = tmp_t - (0.1 / row) * (X.transpose().dot((g(X, thetas, th) - tmp_Y)))
         size = tmp.shape[0]
@@ -158,7 +172,7 @@ def make_predi(X, Y, thetas, nb_theta):
     row = X.shape[0]
     X_train, X_cost, X_test = X[ : floor(row * 0.70)], X[floor(row * 0.70) : floor(row * 0.85)], X[floor(row * 0.85) :]
     Y_train, Y_cost, Y_test = Y[ : floor(row * 0.70)], Y[floor(row * 0.70) : floor(row * 0.85)], Y[floor(row * 0.85) :]
-    for i in range(815):#815
+    for i in range(10000):#815
         tmp = cost_function(X_cost, Y_cost, thetas, nb_theta)
         cost_res.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
         tmp = cost_function(X_train, Y_train, thetas, nb_theta)
@@ -166,7 +180,7 @@ def make_predi(X, Y, thetas, nb_theta):
         #cost_res1.append(tmp[0])
         #cost_res2.append(tmp[1])
        # cost_res3.append(tmp[2])
-       # cost_res4.append(tmp[3])
+        #cost_res4.append(tmp[3])
         index.append(i)
         gradient_descent(X_train, Y_train, thetas, nb_theta)
     plt.plot(index, cost_res, color='red')
@@ -185,8 +199,15 @@ def main():
         sys.exit("too much file")
     data, Y = read_file()
     X_scale = scale_feature(data).transpose()
-    nb_theta = max(Y)
-    thetas = np.zeros((int(nb_theta), data.shape[1]), dtype=float)
+    tmp_mat = np.copy(X_scale)
+    row = tmp_mat.shape[0]
+    col = tmp_mat.shape[1]
+    for i in range(int(row)):
+        for j in range(int(col)):
+            tmp_mat[i][j] = tmp_mat[i][j]**2
+    X_scale = np.c_[X_scale, tmp_mat]
+    nb_theta = 4
+    thetas = np.zeros((int(nb_theta), X_scale.shape[1]), dtype=float)
 #    tmp_thetas = np.zeros((int(nb_theta), data.shape[1]), dtype=float)
     make_predi(X_scale, Y, thetas, nb_theta)
 
