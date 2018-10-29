@@ -6,7 +6,7 @@
 #    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/10 11:14:18 by msukhare          #+#    #+#              #
-#    Updated: 2018/07/10 11:14:21 by msukhare         ###   ########.fr        #
+#    Updated: 2018/10/29 19:07:51 by msukhare         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,7 +34,8 @@ def read_file():
             data.drop([key], axis = 1, inplace = True)
         else:
             keys.append(key)
-    data_describe = pd.DataFrame(0.000, index = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max'], columns = keys)
+    data_describe = pd.DataFrame(0.000,\
+            index = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max'], columns = keys)
     return (data, data_describe, keys)
 
 def ft_count(data):
@@ -88,15 +89,12 @@ def main():
         data_describe[key]['min'] = get_min_or_max(data[key], 0)
         data_describe[key]['max'] = get_min_or_max(data[key], 1)
         data_describe[key]['mean'] = float(ft_mean(data[key], data_describe[key]['count']))
-        data_describe[key]['std'] = float(ft_std(data[key], data_describe[key]['mean'], data_describe[key]['count']))
+        data_describe[key]['std'] = float(ft_std(data[key], data_describe[key]['mean'],\
+                data_describe[key]['count']))
         data_describe[key]['25%'] = float(ft_quantile(data[key], data_describe[key]['count'], 0.25))
         data_describe[key]['50%'] = float(ft_quantile(data[key], data_describe[key]['count'], 0.50))
         data_describe[key]['75%'] = float(ft_quantile(data[key], data_describe[key]['count'], 0.75))
     print(data_describe)
-    data = data.describe()
-    print(data)
-#    for key in keys:
- #       print(data[key])
 
 if __name__ == "__main__":
     main()
