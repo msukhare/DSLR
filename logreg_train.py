@@ -6,7 +6,7 @@
 #    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/10 09:51:06 by msukhare          #+#    #+#              #
-#    Updated: 2018/07/22 15:51:52 by kemar            ###   ########.fr        #
+#    Updated: 2018/10/30 05:16:31 by msukhare         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,18 +27,12 @@ def read_file():
         data = pd.read_csv(sys.argv[1])
     except:
         sys.exit("File doesn't exist")
-    data.drop(['First Name'], axis = 1, inplace = True)
-    data.drop(['Last Name'], axis = 1, inplace = True)
-    data.drop(['Birthday'], axis = 1, inplace = True)
-    data['Best Hand'] = data['Best Hand'].map({'Left' : 0, 'Right': 1})
-    data.drop(['Index'], axis = 1, inplace = True)
+    data.drop(['First Name', 'Last Name', 'Birthday', 'Best Hand', 'Index', 'Astronomy',\
+            'Arithmancy', 'Care of Magical Creatures'], axis = 1, inplace = True)
     data['Hogwarts House'] = data['Hogwarts House'].map({'Ravenclaw' : 3, 'Slytherin': 2, 'Gryffindor' : 1, 'Hufflepuff' : 4})
-  #  for key in data:
-   #     values = {key : data[key].quantile(0.50)}
-   #     data.fillna(value=values, inplace=True)
-    data.dropna(inplace=True)
-    data = data.reset_index()
-    data.drop(['index'], axis = 1, inplace = True)
+    for key in data:
+        data.fillna(value={key: data[key].mean()}, inplace=True)
+    data.sample(frac=1, random_state=4445).reset_index(drop=True)
     Y = data.iloc[:, 0:1]
     Y = np.array(Y.values, dtype=float)
     data.drop(['Hogwarts House'], axis=1, inplace=True)
@@ -58,7 +52,7 @@ def hypo(X, i, thetas, th, bias):
     return (1 / (1 + np.exp(-thetas[th].dot(X[i]) + bias)))
 
 def g(X, thetas, th, bias):
-    tmp = np.reshape(thetas[th], (14, 1))
+    tmp = np.reshape(thetas[th], (X.shape[1], 1))
     return (1 / (1 + np.exp(-X.dot(tmp) + bias)))
 
 def get_new_y(Y, th, row):
@@ -120,7 +114,7 @@ def gradient_descent(X, Y, thetas, nb_theta, bias):
     th = 0
     row = X.shape[0]
     for th in range(int(nb_theta)):
-        tmp_t = np.reshape(thetas[th], (14, 1))
+        tmp_t = np.reshape(thetas[th], (X.shape[1], 1))
         tmp_Y = get_new_y(Y, th, row)
         tmp = tmp_t - (0.06 / row) * (X.transpose().dot((g(X, thetas, th, bias) - tmp_Y)))
         bias = bias - get_somme(X, Y, thetas, th, bias)
