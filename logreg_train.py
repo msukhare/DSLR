@@ -6,7 +6,7 @@
 #    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/10 09:51:06 by msukhare          #+#    #+#              #
-#    Updated: 2018/10/30 05:16:31 by msukhare         ###   ########.fr        #
+#    Updated: 2018/10/30 21:21:20 by kemar            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,20 +22,33 @@ from sklearn.metrics import recall_score
 
 # #---> Algo WITHOUT VECTORIZATION
 
+def replace_nan_by_similare(replace, by):
+    new_feat = np.zeros((replace.shape[0],1), dtype=float)
+    for i in range(int(replace.shape[0])):
+        if (pd.isna(replace[i])):
+            new_feat[i][0] = by[i]
+        else:
+            new_feat[i][0] = replace[i]
+    return (replace)
+
 def read_file():
     try:
         data = pd.read_csv(sys.argv[1])
     except:
         sys.exit("File doesn't exist")
-    data.drop(['First Name', 'Last Name', 'Birthday', 'Best Hand', 'Index', 'Astronomy',\
+    data.drop(['First Name', 'Last Name', 'Birthday', 'Best Hand', 'Index',\
             'Arithmancy', 'Care of Magical Creatures'], axis = 1, inplace = True)
-    data['Hogwarts House'] = data['Hogwarts House'].map({'Ravenclaw' : 3, 'Slytherin': 2, 'Gryffindor' : 1, 'Hufflepuff' : 4})
+    data['Hogwarts House'] = data['Hogwarts House'].map({'Ravenclaw' : 3, 'Slytherin': 2,\
+            'Gryffindor' : 1, 'Hufflepuff' : 4})
     for key in data:
-        data.fillna(value={key: data[key].mean()}, inplace=True)
+        if (key != "Hogwarts House" and key != "Defense Against the Dark Arts"):
+            data.fillna(value={key: data[key].mean()}, inplace=True)
+    data['Defense Against the Dark Arts'] = replace_nan_by_similare(data['Defense Against the Dark Arts'],\
+            data['Astronomy'])
     data.sample(frac=1, random_state=4445).reset_index(drop=True)
     Y = data.iloc[:, 0:1]
     Y = np.array(Y.values, dtype=float)
-    data.drop(['Hogwarts House'], axis=1, inplace=True)
+    data.drop(['Hogwarts House', 'Astronomy'], axis=1, inplace=True)
     return (data, Y)
 
 def scale_feature(data):
@@ -108,7 +121,7 @@ def get_somme(X, Y, thetas, th, bias):
             res += ((hypo(X, i, thetas, th, bias) - 1))
         else:
             res += ((hypo(X, i, thetas, th, bias) - 0))
-    return (((0.06 / row) * res))
+    return (((0.12 / row) * res))
 
 def gradient_descent(X, Y, thetas, nb_theta, bias):
     th = 0
@@ -116,7 +129,7 @@ def gradient_descent(X, Y, thetas, nb_theta, bias):
     for th in range(int(nb_theta)):
         tmp_t = np.reshape(thetas[th], (X.shape[1], 1))
         tmp_Y = get_new_y(Y, th, row)
-        tmp = tmp_t - (0.06 / row) * (X.transpose().dot((g(X, thetas, th, bias) - tmp_Y)))
+        tmp = tmp_t - (0.12 / row) * (X.transpose().dot((g(X, thetas, th, bias) - tmp_Y)))
         bias = bias - get_somme(X, Y, thetas, th, bias)
         size = tmp.shape[0]
         for i in range(int(size)):
@@ -181,39 +194,26 @@ def get_quality_theta(X, Y, thetas, nb_theta, bias):
     print(accuracy_score(Y, tm))
 
 def make_predi(X, Y, thetas, nb_theta):
-    #cost_res = []
-    #cost_res2 = []
-    #cost_res1 = []
-    #cost_res2 = []
-    #cost_res3 = []
-    #cost_res4 = []
-    i = 0
-    #index = []
+    cost_res = []
+    cost_res2 = []
+    index = []
     row = X.shape[0]
     bias = 0.0
     X_train, X_cost = X[ : floor(row * 0.85)], X[floor(row * 0.85) :]
     Y_train, Y_cost = Y[ : floor(row * 0.85)], Y[floor(row * 0.85) :]
     #X_train, X_cost, X_test = X[ : floor(row * 0.85)], X[floor(row * 0.85) :]
     #Y_train, Y_cost, Y_test = Y[ : floor(row * 0.70)], Y[floor(row * 0.70) : floor(row * 0.85)], Y[floor(row * 0.85) :]
-    for i in range(5000):#815
-        #tmp = cost_function(X_cost, Y_cost, thetas, nb_theta, bias)
-        #cost_res.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
-        #tmp = cost_function(X_train, Y_train, thetas, nb_theta, bias)
-        #cost_res2.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
-        #cost_res1.append(tmp[0])
-        #cost_res2.append(tmp[1])
-       # cost_res3.append(tmp[2])
-        #cost_res4.append(tmp[3])
-        #index.append(i)
+    for i in range(815):#815
+        tmp = cost_function(X_cost, Y_cost, thetas, nb_theta, bias)
+        cost_res.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
+        tmp = cost_function(X_train, Y_train, thetas, nb_theta, bias)
+        cost_res2.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
+        index.append(i)
         gradient_descent(X_train, Y_train, thetas, nb_theta, bias)
-    #plt.plot(index, cost_res, color='red')
-    #plt.plot(index, cost_res2, color='green')
-   # plt.plot(index, cost_res1)
-   # plt.plot(index, cost_res2)
-   # plt.plot(index, cost_res3)
-   # plt.plot(index, cost_res4)
-    #plt.show()
-    get_quality_theta(X_cost, Y_cost, thetas, nb_theta, bias)
+    plt.plot(index, cost_res, color='red')
+    plt.plot(index, cost_res2, color='green')
+    plt.show()
+    get_quality_theta(X_train, Y_train, thetas, nb_theta, bias)
 
 def main():
     if (len(sys.argv) <= 1):
