@@ -6,7 +6,7 @@
 #    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/10 09:51:06 by msukhare          #+#    #+#              #
-#    Updated: 2018/10/30 21:21:20 by kemar            ###   ########.fr        #
+#    Updated: 2018/10/31 17:04:48 by msukhare         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -29,26 +29,27 @@ def replace_nan_by_similare(replace, by):
             new_feat[i][0] = by[i]
         else:
             new_feat[i][0] = replace[i]
-    return (replace)
+    return (new_feat)
 
 def read_file():
     try:
         data = pd.read_csv(sys.argv[1])
     except:
         sys.exit("File doesn't exist")
-    data.drop(['First Name', 'Last Name', 'Birthday', 'Best Hand', 'Index',\
-            'Arithmancy', 'Care of Magical Creatures'], axis = 1, inplace = True)
+    #data['Best Hand'] = data['Best Hand'].map({'Left' : 1, 'Right': 0})
+    data.drop(['First Name', 'Last Name', 'Birthday', 'Index', 'Best Hand', 'Arithmancy',\
+            'Care of Magical Creatures'], axis = 1, inplace = True)
     data['Hogwarts House'] = data['Hogwarts House'].map({'Ravenclaw' : 3, 'Slytherin': 2,\
             'Gryffindor' : 1, 'Hufflepuff' : 4})
     for key in data:
-        if (key != "Hogwarts House" and key != "Defense Against the Dark Arts"):
+        if (key != "Hogwarts House" and key != "Astronomy"):
             data.fillna(value={key: data[key].mean()}, inplace=True)
-    data['Defense Against the Dark Arts'] = replace_nan_by_similare(data['Defense Against the Dark Arts'],\
-            data['Astronomy'])
-    data.sample(frac=1, random_state=4445).reset_index(drop=True)
+    data['Astronomy'] = replace_nan_by_similare(data['Astronomy'], \
+            data['Defense Against the Dark Arts'])
+    data.sample(frac=1, random_state=785).reset_index(drop=True)
     Y = data.iloc[:, 0:1]
     Y = np.array(Y.values, dtype=float)
-    data.drop(['Hogwarts House', 'Astronomy'], axis=1, inplace=True)
+    data.drop(['Hogwarts House', 'Defense Against the Dark Arts'], axis=1, inplace=True)
     return (data, Y)
 
 def scale_feature(data):
@@ -57,16 +58,16 @@ def scale_feature(data):
     i = 0
     for key in data:
         for j in range(int(desc[key]['count'])):
-            X_scale[i][j] = (data[key][j] - desc[key]['mean']) / desc[key]['std']#(desc[key]['max'] - desc[key]['min'])
+            X_scale[i][j] = (data[key][j] - desc[key]['mean']) / desc[key]['std'] #(desc[key]['max'] - desc[key]['min'])
         i += 1
     return (X_scale)
 
-def hypo(X, i, thetas, th, bias):
-    return (1 / (1 + np.exp(-thetas[th].dot(X[i]) + bias)))
+def hypo(X, i, thetas, th):
+    return (1 / (1 + np.exp(-thetas[th].dot(X[i]))))
 
-def g(X, thetas, th, bias):
+def g(X, thetas, th):
     tmp = np.reshape(thetas[th], (X.shape[1], 1))
-    return (1 / (1 + np.exp(-X.dot(tmp) + bias)))
+    return (1 / (1 + np.exp(-X.dot(tmp))))
 
 def get_new_y(Y, th, row):
     new_Y = np.zeros((row, Y.shape[1]), dtype=float)
@@ -75,15 +76,16 @@ def get_new_y(Y, th, row):
             new_Y[i][0] = 1
     return (new_Y)
 
-def get_cost(X, thetas, hs, Y, bias):
-    return (-Y.transpose().dot(np.log(g(X, thetas, hs, bias))) - (1 - Y).transpose().dot(np.log(1 - g(X, thetas, hs, bias))))
+def get_cost(X, thetas, hs, Y):
+    return (-Y.transpose().dot(np.log(g(X, thetas, hs))) - (1 - Y).transpose().dot(np.log(1 -\
+            g(X, thetas, hs))))
 
-def cost_function(X, Y, thetas, nb_theta, bias):
+def cost_function(X, Y, thetas, nb_theta):
     row = X.shape[0]
     ret = []
     for hs in range(int(nb_theta)):
         new_y = get_new_y(Y, hs, row)
-        tmp = ((1 / row) * get_cost(X, thetas, hs, new_y, bias))
+        tmp = ((1 / row) * get_cost(X, thetas, hs, new_y))
         ret.append(tmp[0][0])
     return (ret)
 
@@ -113,27 +115,27 @@ def cost_function(X, Y, thetas, nb_theta, bias):
      #       res += ((hypo(X, i, thetas, bias) - 0) * X[i][j])
    # return (((0.03 / row) * res))
 
-def get_somme(X, Y, thetas, th, bias):
+def get_somme(X, Y, thetas, th):
     res = 0
     row = X.shape[0]
     for i in range(int(row)):
         if (Y[i][0] == (th + 1)):
-            res += ((hypo(X, i, thetas, th, bias) - 1))
+            res += (hypo(X, i, thetas, th) - 1)
         else:
-            res += ((hypo(X, i, thetas, th, bias) - 0))
-    return (((0.12 / row) * res))
+            res += hypo(X, i, thetas, th)
+    return ((-(0.6 / row) * res))
 
-def gradient_descent(X, Y, thetas, nb_theta, bias):
+def gradient_descent(X, Y, thetas, nb_theta):
     th = 0
     row = X.shape[0]
     for th in range(int(nb_theta)):
         tmp_t = np.reshape(thetas[th], (X.shape[1], 1))
         tmp_Y = get_new_y(Y, th, row)
-        tmp = tmp_t - (0.12 / row) * (X.transpose().dot((g(X, thetas, th, bias) - tmp_Y)))
-        bias = bias - get_somme(X, Y, thetas, th, bias)
+        tmp = tmp_t - (0.06 / row) * (X.transpose().dot((g(X, thetas, th) - tmp_Y)))
         size = tmp.shape[0]
         for i in range(int(size)):
             thetas[th][i] = tmp[i][0]
+    #return (bias)
 
 #def gradient_descent(X, Y, thetas, tmp_thetas, nb_theta):
    # th = 0
@@ -146,7 +148,7 @@ def gradient_descent(X, Y, thetas, nb_theta, bias):
    #     for j in range(int(col)):
    #         thetas[th][j] = tmp_thetas[th][j]
 
-def get_quality_theta(X, Y, thetas, nb_theta, bias):
+def get_quality_theta(X, Y, thetas, nb_theta):
     row = X.shape[0]
     precision = 0
     recall = 0
@@ -154,7 +156,7 @@ def get_quality_theta(X, Y, thetas, nb_theta, bias):
     print(Y.shape[0], tm.shape[0], Y.shape[1], tm.shape[1])
     for i in range(int(row)):
         for hs in range(int(nb_theta)):
-            t = hypo(X, i, thetas, hs, bias)
+            t = hypo(X, i, thetas, hs)
             if (t >= 0.5):
                 tm[i] = (hs + 1)
     pre = 0
@@ -198,22 +200,21 @@ def make_predi(X, Y, thetas, nb_theta):
     cost_res2 = []
     index = []
     row = X.shape[0]
-    bias = 0.0
-    X_train, X_cost = X[ : floor(row * 0.85)], X[floor(row * 0.85) :]
-    Y_train, Y_cost = Y[ : floor(row * 0.85)], Y[floor(row * 0.85) :]
-    #X_train, X_cost, X_test = X[ : floor(row * 0.85)], X[floor(row * 0.85) :]
-    #Y_train, Y_cost, Y_test = Y[ : floor(row * 0.70)], Y[floor(row * 0.70) : floor(row * 0.85)], Y[floor(row * 0.85) :]
-    for i in range(815):#815
-        tmp = cost_function(X_cost, Y_cost, thetas, nb_theta, bias)
+    #X_train, X_test = X[ : floor(row * 0.85)], X[floor(row * 0.85) :]
+    #Y_train, Y_test = Y[ : floor(row * 0.85)], Y[floor(row * 0.85) :]
+    X_train, X_test, X_val = X[ : floor(row * 0.70)], X[floor(row * 0.70) : floor(row * 0.75)], X[floor(row * 0.75) :]
+    Y_train, Y_test, Y_val = Y[ : floor(row * 0.70)], Y[floor(row * 0.70) : floor(row * 0.75)], Y[floor(row * 0.75) :]
+    for i in range(5000):#815
+        tmp = cost_function(X_test, Y_test, thetas, nb_theta)
         cost_res.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
-        tmp = cost_function(X_train, Y_train, thetas, nb_theta, bias)
+        tmp = cost_function(X_train, Y_train, thetas, nb_theta)
         cost_res2.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
         index.append(i)
-        gradient_descent(X_train, Y_train, thetas, nb_theta, bias)
+        gradient_descent(X_train, Y_train, thetas, nb_theta)
     plt.plot(index, cost_res, color='red')
     plt.plot(index, cost_res2, color='green')
     plt.show()
-    get_quality_theta(X_train, Y_train, thetas, nb_theta, bias)
+    get_quality_theta(X_val, Y_val, thetas, nb_theta)
 
 def main():
     if (len(sys.argv) <= 1):
@@ -231,6 +232,7 @@ def main():
      #       tmp_mat[i][j] = tmp_mat[i][j]**2
     #X_scale = np.c_[X_scale, tmp_mat]
     nb_theta = max(Y)
+    X_scale = np.c_[np.ones((X_scale.shape[0], 1), dtype=float), X_scale]
     thetas = np.zeros((int(nb_theta), X_scale.shape[1]), dtype=float)
 #    tmp_thetas = np.zeros((int(nb_theta), data.shape[1]), dtype=float)
     make_predi(X_scale, Y, thetas, nb_theta)
