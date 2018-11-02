@@ -6,7 +6,7 @@
 #    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/10 09:51:06 by msukhare          #+#    #+#              #
-#    Updated: 2018/11/01 19:49:05 by kemar            ###   ########.fr        #
+#    Updated: 2018/11/02 17:24:18 by msukhare         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,10 +15,6 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 from math import floor
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
 from read_and_complete_data import read_file
 
 def hypo(X, i, thetas, th):
@@ -28,9 +24,9 @@ def g(X, thetas, th):
     tmp = np.reshape(thetas[th], (X.shape[1], 1))
     return (1 / (1 + np.exp(-X.dot(tmp))))
 
-def get_new_y(Y, th, row):
-    new_Y = np.zeros((row, Y.shape[1]), dtype=float)
-    for i in range(int(row)):
+def get_new_y(Y, th):
+    new_Y = np.zeros((Y.shape[0], Y.shape[1]), dtype=float)
+    for i in range(int(Y.shape[0])):
         if (Y[i] == (th + 1)):
             new_Y[i][0] = 1
     return (new_Y)
@@ -43,7 +39,7 @@ def cost_function(X, Y, thetas, nb_theta):
     row = X.shape[0]
     ret = []
     for hs in range(int(nb_theta)):
-        new_y = get_new_y(Y, hs, row)
+        new_y = get_new_y(Y, hs)
         tmp = ((1 / row) * get_cost(X, thetas, hs, new_y))
         ret.append(tmp[0][0])
     return (ret)
@@ -53,7 +49,7 @@ def gradient_descent(X, Y, thetas, nb_theta):
     row = X.shape[0]
     for th in range(int(nb_theta)):
         tmp_t = np.reshape(thetas[th], (X.shape[1], 1))
-        tmp_Y = get_new_y(Y, th, row)
+        tmp_Y = get_new_y(Y, th)
         tmp = tmp_t - (0.06 / row) * (X.transpose().dot((g(X, thetas, th) - tmp_Y)))
         size = tmp.shape[0]
         for i in range(int(size)):
@@ -68,52 +64,52 @@ def get_index_max(all_res):
             ind = i
     return (ind)
 
-def get_quality_classifier(X, Y, thetas, nb_theta):
-    row = X.shape[0]
-    precision = 0
-    recall = 0
-    tm = np.zeros((Y.shape[0], Y.shape[1]), dtype=float)
-    print(Y.shape[0], tm.shape[0], Y.shape[1], tm.shape[1])
-    for i in range(int(row)):
+def predict_Y(X, thetas, nb_theta):
+    prediction = np.zeros((X.shape[0], 1), dtype=int)
+    for i in range(X.shape[0]):
         all_res = []
         for hs in range(int(nb_theta)):
             all_res.append(float(hypo(X, i, thetas, hs)))
-        tm[i] = (get_index_max(all_res) + 1)
-    pre = 0
-    accu = 0
+        prediction[i][0] = (get_index_max(all_res) + 1)
+    return (prediction)
+
+def get_accuracy(pred_Y, Y):
+    nb_true = 0
+    for i in range(pred_Y.shape[0]):
+        if (pred_Y[i][0] == Y[i][0]):
+            nb_true += 1
+    return (float(nb_true / Y.shape[0]))
+
+def get_quality_classifier(X, Y, thetas, nb_theta):
+    pred_Y = predict_Y(X, thetas, nb_theta)
+    precision = 0
+    recall = 0
     for hs in range(int(nb_theta)):
-        vp = 0
+        tp = 0
         fp = 0
+        tn = 0
         fn = 0
-        vn = 0
-        true_y = get_new_y(Y, hs, row)
-        pred_y = get_new_y(tm, hs, row)
-        pre += precision_score(true_y, pred_y)
-        accu += accuracy_score(true_y, pred_y)
-        print(accuracy_score(true_y, pred_y))
-        for i in range(int(row)):
-            if (true_y[i] == 1 and pred_y[i] == 1):
-                vp += 1
-            elif (true_y[i] == 0 and pred_y[i] == 1):
+        tmp_y = get_new_y(Y, hs)
+        tmp_pred_y = get_new_y(pred_Y, hs)
+        for i in range(tmp_y.shape[0]):
+            if (tmp_y[i][0] == 1 and tmp_pred_y[i][0] == 1):
+                tp += 1
+            elif (tmp_y[i][0] == 0 and tmp_pred_y[i][0] == 1):
                 fp += 1
-            elif (true_y[i] == 1 and pred_y[i] == 0):
+            elif (tmp_y[i][0] == 1 and tmp_pred_y[i][0] == 0):
                 fn += 1
-            elif (true_y[i] == 0 and pred_y[i] == 0):
-                vn += 1
-        tn, fp1, fn1, tp = confusion_matrix(true_y, pred_y).ravel()
-        print(tn, fp1, fn1, tp)
-        print(vn, fp, fn, vp)
-        precision += (vp / (vp + fp))
-        recall += (vp / (vp + fn))
-  #  print(tm, len(tm), Y, Y.shape[0])
-    precision = ((1 / nb_theta) * precision)
-    recall = ((1 / nb_theta) * recall)
-    print("precision :", precision)
-    print("recall :", recall)
+            elif (tmp_y[i][0] == 0 and tmp_pred_y[i][0] == 0):
+                tn += 1
+        print("For the class: ", (hs + 1))
+        print("tp: ", tp, ", fp: ", fp, ", fn: ", fn, ", tn: ", tn)
+        precision += (tp / (tp + fp))
+        recall += (tp / (tp + fn))
+    precision = precision / nb_theta
+    recall = recall / nb_theta
+    print("precision: ", precision)
+    print("recall: ", recall)
     print("f1 :", ((2 * (precision * recall)) / (precision + recall)))
-    print(((1 / nb_theta) * pre))
-    print(((1 / nb_theta) * accu))
-    print(accuracy_score(Y, tm))  
+    print("accuracy: ", get_accuracy(pred_Y, Y))
 
 def train_thetas(X, Y, thetas, nb_theta):
     cost_res = []
@@ -124,7 +120,7 @@ def train_thetas(X, Y, thetas, nb_theta):
             X[floor(row * 0.90) :]
     Y_train, Y_test, Y_val = Y[ : floor(row * 0.70)], Y[floor(row * 0.70) : floor(row * 0.90)],\
             Y[floor(row * 0.90) :]
-    for i in range(2000):#815
+    for i in range(815):#815
         tmp = cost_function(X_test, Y_test, thetas, nb_theta)
         cost_res.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
         tmp = cost_function(X_train, Y_train, thetas, nb_theta)
