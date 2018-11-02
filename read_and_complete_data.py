@@ -45,7 +45,7 @@ def read_file(to_ret):
             data['Defense Against the Dark Arts'])
     if (to_ret == "predict"):
         data.drop(['Hogwarts House', 'Defense Against the Dark Arts'], axis=1, inplace=True)
-        return (scale_feature(data.iloc[1600: ]).transpose())
+        return (scale_feature(data.iloc[1600: ].reset_index(drop=True)).transpose())
     data = data.iloc[0: 1600]
     data = data.sample(frac=1, random_state=52).reset_index(drop=True)
     Y = data.iloc[:, 0:1]

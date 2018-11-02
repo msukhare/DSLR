@@ -6,16 +6,17 @@
 #    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/10 09:51:06 by msukhare          #+#    #+#              #
-#    Updated: 2018/11/02 17:24:18 by msukhare         ###   ########.fr        #
+#    Updated: 2018/11/02 22:09:18 by kemar            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 import pandas as pd
 import numpy as np
-import sys
 import matplotlib.pyplot as plt
 from math import floor
 from read_and_complete_data import read_file
+import sys
+import csv
 
 def hypo(X, i, thetas, th):
     return (1 / (1 + np.exp(-thetas[th].dot(X[i]))))
@@ -45,7 +46,6 @@ def cost_function(X, Y, thetas, nb_theta):
     return (ret)
 
 def gradient_descent(X, Y, thetas, nb_theta):
-    th = 0
     row = X.shape[0]
     for th in range(int(nb_theta)):
         tmp_t = np.reshape(thetas[th], (X.shape[1], 1))
@@ -100,16 +100,16 @@ def get_quality_classifier(X, Y, thetas, nb_theta):
                 fn += 1
             elif (tmp_y[i][0] == 0 and tmp_pred_y[i][0] == 0):
                 tn += 1
-        print("For the class: ", (hs + 1))
-        print("tp: ", tp, ", fp: ", fp, ", fn: ", fn, ", tn: ", tn)
+        print("For the class:", (hs + 1))
+        print("tp:", tp, ", fp:", fp, ", fn:", fn, ", tn:", tn)
         precision += (tp / (tp + fp))
         recall += (tp / (tp + fn))
     precision = precision / nb_theta
     recall = recall / nb_theta
-    print("precision: ", precision)
-    print("recall: ", recall)
-    print("f1 :", ((2 * (precision * recall)) / (precision + recall)))
-    print("accuracy: ", get_accuracy(pred_Y, Y))
+    print("precision:", precision)
+    print("recall:", recall)
+    print("f1:", ((2 * (precision * recall)) / (precision + recall)))
+    print("accuracy:", get_accuracy(pred_Y, Y))
 
 def train_thetas(X, Y, thetas, nb_theta):
     cost_res = []
@@ -132,12 +132,22 @@ def train_thetas(X, Y, thetas, nb_theta):
     plt.show()
     get_quality_classifier(X_val, Y_val, thetas, nb_theta)
 
+def write_thetas_in_file(thetas):
+    try:
+        file = csv.writer(open("thetas.csv", "w"), delimiter=',',\
+                quoting=csv.QUOTE_MINIMAL)
+    except:
+        sys.exit("fail to create thetas.csv")
+    for i in range(thetas.shape[0]):
+        file.writerow(thetas[i])
+
 def main():
     X, Y = read_file("train")
     nb_theta = max(Y)
     X = np.c_[np.ones((X.shape[0], 1), dtype=float), X]
     thetas = np.zeros((int(nb_theta), X.shape[1]), dtype=float)
     train_thetas(X, Y, thetas, nb_theta)
+    write_thetas_in_file(thetas)
 
 if __name__ == "__main__":
     main()
