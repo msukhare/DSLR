@@ -31,9 +31,18 @@ def write_pred_in_file(pred_Y):
             name_house = "Hufflepuff"
         file.writerow([i, name_house])
 
+def check_argv():
+    if (len(sys.argv) <= 1):
+        sys.exit("Need name file")
+    if (len(sys.argv) >= 3):
+        sys.exit("too much file")
+    if (sys.argv[1] != "dataset_test.csv"):
+        sys.exit("the name of file must be dataset_test.csv")
+
 def main():
+    check_argv()
     thetas = read_thetas()
-    X = read_file("predict")
+    X = read_file("predict", "dataset_train.csv", sys.argv[1])
     X = np.c_[np.ones((X.shape[0], 1), dtype=float), X]
     pred_Y = predict_Y(X, thetas, thetas.shape[0])
     write_pred_in_file(pred_Y)

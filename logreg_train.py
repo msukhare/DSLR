@@ -6,7 +6,7 @@
 #    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/10 09:51:06 by msukhare          #+#    #+#              #
-#    Updated: 2018/11/02 22:09:18 by kemar            ###   ########.fr        #
+#    Updated: 2018/11/03 14:24:25 by kemar            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -141,8 +141,17 @@ def write_thetas_in_file(thetas):
     for i in range(thetas.shape[0]):
         file.writerow(thetas[i])
 
+def check_argv():
+    if (len(sys.argv) <= 1):
+        sys.exit("Need file name with data")
+    if (len(sys.argv) >= 3):
+        sys.exit("too much arguments")
+    if (sys.argv[1] != "dataset_train.csv"):
+        sys.exit("file must be dataset_train.csv")
+
 def main():
-    X, Y = read_file("train")
+    check_argv()
+    X, Y = read_file("train", sys.argv[1], "dataset_test.csv")
     nb_theta = max(Y)
     X = np.c_[np.ones((X.shape[0], 1), dtype=float), X]
     thetas = np.zeros((int(nb_theta), X.shape[1]), dtype=float)
