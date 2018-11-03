@@ -20,6 +20,7 @@ def write_pred_in_file(pred_Y):
                 quoting=csv.QUOTE_MINIMAL)
     except:
         sys.exit("fail to create house.csv")
+    file.writerow(["Index", "Hogwarts House"])
     for i in range(pred_Y.shape[0]):
         if (pred_Y[i] == 1):
             name_house = "Gryffindor"
