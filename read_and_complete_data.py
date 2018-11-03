@@ -29,9 +29,9 @@ def get_content_file(file):
         sys.exit()
     return (content)
 
-def read_file(to_ret):
-    data_train = get_content_file("dataset_train.csv")
-    data_test = get_content_file("dataset_test.csv")
+def read_file(to_ret, train, test):
+    data_train = get_content_file(train)
+    data_test = get_content_file(test)
     data = [data_train, data_test]
     data = pd.concat(data).reset_index(drop=True)
     data.drop(['First Name', 'Last Name', 'Birthday', 'Index', 'Best Hand', 'Arithmancy',\
