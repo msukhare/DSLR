@@ -2,7 +2,7 @@
 
 ## About DSLR:
 
-* DSLR is a machine learning project.
+* DSLR is a machine learning project. The goal of this project is to do a logistic regression from scratch.
 
 * DSLR is composed of six scripts, `describe.py`, `histogram.py`, `scatter_plot.py`, `pair_plot.py`, `logreg_train.py` and `logreg_predict.py`.
 
