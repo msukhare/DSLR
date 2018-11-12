@@ -10,7 +10,7 @@
 
 * `describe.py` is a reproduction of [pandas](https://pandas.pydata.org/) method appointed [describe](https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.describe.html).
 
-* `describe.py` takes a csv as an argument and print describe (cout, std, mean, quantiles, max, min) in the standard output.
+* `describe.py` takes a csv as an argument and print describe (cout, std, mean, quantiles, max, min) for each numerical features in the standard output.
 
 ### About `histogram.py`:
 
