@@ -2,55 +2,97 @@ import numpy as np
 import pickle
 import os
 
-from .optimizers import gradient_descent, compute_dweights
-from .activation_functions import sigmoid
-from .cost_functions import binary_cross_entropy
-
-def transform_dummy_var(Y):
-    classes = np.unique(Y)
-    to_ret = np.zeros((Y.shape[0], classes.shape[0]))
-    for i, ele in enumerate(classes):
-        idx_set_to_one = np.where(Y == ele)[0]
-        to_ret[idx_set_to_one, i] = 1
-    return to_ret, classes
+from .kernels import KERNELS
+from .metrics import accuracy_score,\
+                        precision_score,\
+                        recall_score,\
+                        f1_score
 
 class LogisticReg:
 
     def __init__(self,\
+                kernel='OVR',\
+                optimizer='gradient_descent',\
+                regularization=None,\
                 lr=0.01,\
                 epochs=100,\
-                batch=None,\
-                show_training=False):
+                batch_size=None,\
+                early_stopping=False,\
+                validation_fraction=0.10,\
+                n_epochs_no_change=5,\
+                tol=1e-3
+                validate=False,\
+                accuracy=False,\
+                precision=False,\
+                recall=False,\
+                f1=False):
+        if kernel not in KERNELS.keys():
+            raise Exception("%s is not a valide kernel")
+        self.kernel = KERNELS[kernel]
+        self.optimizer = optimizer
+        self.regularization = regularization
         self.lr = lr
         self.epochs = epochs
+        self.batch_size = batch_size
+        self.early_stopping = early_stopping
+        self.validation_fraction = validation_fraction
+        self.n_epochs_no_change = n_epochs_no_change
+        self.tol = tol
+        self.validate = validate
+        self.accuracy = accuracy
+        self.precision = precision
+        self.recall = recall
+        self.f1 = f1
         self.weights = None
-        self.batch = batch
         self.classes = None
 
-    def fit(self, X, Y):
-        Y, self.classes = transform_dummy_var(Y)
-        X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
-        if self.weights is None:
-            self.weights = np.zeros((X.shape[1], Y.shape[1]))
-        for epoch in range(self.epochs):
-            forward_res = sigmoid(X, self.weights)
-            dweights = compute_dweights(X, forward_res, Y)
-            self.weights = gradient_descent(self.weights, dweights, self.lr)
-            train_loss = 0
-            for i in range(self.classes.shape[0]):
-                train_loss += binary_cross_entropy(Y[:, i], forward_res[:, i])
-            train_loss /= self.classes.shape[0]
-        print("training 2:", train_loss)
-
-    def predict(self, X):
-        return np.argmax(self.predict_proba(X), axis=1)
+    def predict_proba(self, X):
+        pass
 
     def predict_proba(self, X):
-        X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
-        return sigmoid(X, self.weights)
+        pass
 
     def eval(self, X, Y):
         pass
+
+    def get_batch(X, Y):
+        i = 0
+        while (i < X.shape[0]):
+            yield X[i: i + self.batch_size], Y[i: i + self.batch_size]
+            i += self.batch_size
+        if i < X.shape[0]:
+            yield X[i:], Y[i:]
+
+    def fit(self, X, Y):
+        self.classes, Y = self.kernel.transform_y(Y)
+        X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
+        if self.batch_size is None:
+            self.batch_size = X.shape[0]
+        self.weights = self.kernel.init_weights(self.weights, self.classes, X)
+        for epoch in range(self.epochs):
+            global_loss = 0
+            training_process = ""
+            for i, X_batch, Y_batch in enumerate(self.get_batch(X, Y)):
+                self.weights, loss = self.kernel.infer_on_batch(X_batch,\
+                                                                Y_batch,\
+                                                                self.classes,\
+                                                                self.weights,\
+                                                                self.lr,\
+                                                                self.regularization,\
+                                                                self.optimizer)
+                global_loss += loss
+            training_process += "%d/%d loss train is equal to %f" %(epoch, self.epochs, global_loss / i)
+            if self.validate is True:
+                training_process += "; loss val is equal to %f" %(loss_val)
+                if self.accuracy is True:
+                    training_process += "; val accuracy is equal to %f" %(accuracy_score(predictions_val, Y_val))
+                if self.precision is True:
+                    training_process += "; val precision is equal to %f" %(precision_score(predictions_val, Y_val))
+                if self.recall is True:
+                    training_process += "; val recall is equal to %f" %(recall_score(predictions_val, Y_val))
+                if self.f1_score is True:
+                    training_process += "; val f1_score is equal to %f" %(f1_score(predictions_val, Y_val))
+            print(training_process)
 
     def features_importance(self, columns):
         pass
