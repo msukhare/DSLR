@@ -324,8 +324,6 @@ if __name__ == "__main__":
         sys.exit("Error: %s doesn't exists" %parsed_args.data_path)
     if os.path.isfile(parsed_args.data_path) is False:
         sys.exit("Error: %s must be a file" %parsed_args.data_path)
-    if parsed_args.Y_name is None:
-        sys.exit("Error: missing name of column to predict")
     main(parsed_args)
 
 """ Algo without Vectorization

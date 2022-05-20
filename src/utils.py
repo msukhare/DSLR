@@ -2,10 +2,14 @@ import pandas as pd
 import numpy as np
 
 def replace_nan_by_mean(column):
-    pass
+    index_nan = column.index[column.apply(np.isnan)]
+    column[index_nan] = np.mean(column)
+    return column
 
-def replace_nan_by_correlated(X, correlated):
-    pass
+def replace_nan_by_correlated_value(X, correlated):
+    index_nan = X.index[X.apply(np.isnan)]
+    X[index_nan] = correlated[index_nan]
+    return X
 
 def read_data_csv_cls(path_to_data, train=False, seed=423):
     data = pd.read_csv(path_to_data)
@@ -17,9 +21,8 @@ def read_data_csv_cls(path_to_data, train=False, seed=423):
     if train is True:
         labels = {lab: i for i, lab in enumerate(sorted(list(set(data['Hogwarts House']))))}
         Y = np.asarray(data['Hogwarts House'].map(labels))
-    data = data.drop(['Hogwarts House'], inplace=False).reset_index(drop=True)
-    data[] = replace_nan_by_correlated_value(data[], data[])
-    data = data.drop(['', '', ''], inplace=False).reset_index(drop=True)
+    data['Defense Against the Dark Arts'] = replace_nan_by_correlated_value(data['Defense Against the Dark Arts'].copy(deep=True), data['Astronomy'])
+    data = data.drop(['Best Hand', 'Arithmancy', 'Care of Magical Creatures', 'Astronomy', 'Hogwarts House', 'First Name', 'Last Name', 'Birthday', 'Index'], inplace=False, axis=1).reset_index(drop=True)
     for column in data:
-        data[column] = replace_nan_by_mean(data[column])
+        data[column] = replace_nan_by_mean(data[column].copy(deep=True))
     return np.asarray(data), Y

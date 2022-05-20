@@ -3,10 +3,10 @@ import pickle
 import os
 
 from .kernels import KERNELS
-from .metrics import accuracy_score,\
-                        precision_score,\
-                        recall_score,\
-                        f1_score
+#from .metrics import accuracy_score,\
+#                        precision_score,\
+#                        recall_score,\
+#                        f1_score
 
 class LogisticReg:
 
@@ -20,7 +20,7 @@ class LogisticReg:
                 early_stopping=False,\
                 validation_fraction=0.10,\
                 n_epochs_no_change=5,\
-                tol=1e-3
+                tol=1e-3,\
                 validate=False,\
                 accuracy=False,\
                 precision=False,\

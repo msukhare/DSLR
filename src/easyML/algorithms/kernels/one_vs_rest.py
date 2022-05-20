@@ -2,7 +2,7 @@ import numpy as np
 
 from ..activation_functions import sigmoid
 from ..cost_functions import binary_cross_entropy
-from ..optimizer import compute_dweights,\
+from ..optimizers import compute_dweights,\
                         gradient_descent
 
 class OVR:
