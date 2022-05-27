@@ -116,11 +116,11 @@ def train_thetas(X, Y, thetas, nb_theta):
     X_train = X
     Y_train = Y
     for i in range(100):#815
-        tmp = cost_function(X_test, Y_test, thetas, nb_theta)
+        #tmp = cost_function(X_test, Y_test, thetas, nb_theta)
         #cost_res.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
         gradient_descent(X_train, Y_train, thetas, nb_theta)
-    tmp = cost_function(X_train, Y_train, thetas, nb_theta)
-    print("training: ", np.mean(np.asarray(tmp)))
+    #tmp = cost_function(X_train, Y_train, thetas, nb_theta)
+    #print("training: ", np.mean(np.asarray(tmp)))
     #cost_res2.append((tmp[0] + tmp[1] + tmp[2] + tmp[3]) / 4)
     #index.append(i)
     #plt.plot(index, cost_res, color='red')
@@ -146,7 +146,7 @@ def check_argv():
         sys.exit("file must be dataset_train.csv")
 
 
-def main_2():
+def main_2(cc):
     #check_argv()
     #X, Y = read_file("train", sys.argv[1], "dataset_test.csv")
     X = np.array([[1, 1], [2, 2], [3, 3], [4, 4]])
@@ -178,7 +178,7 @@ def main(args):
                                 args.learning_rate,\
                                 args.epochs,\
                                 args.batch_size,\
-                                args.early_stoping,\
+                                args.early_stopping,\
                                 args.validation_fraction,\
                                 args.n_epochs_no_change,\
                                 args.tol,\
@@ -187,6 +187,9 @@ def main(args):
                                 args.precision,\
                                 args.recall,\
                                 args.f1_score)
+
+    classificator.fit(X, Y)
+
     try:
         classificator.fit(X, Y)
     except Exception as error:
@@ -315,7 +318,7 @@ if __name__ == "__main__":
     parser.add_argument('--f1_score',\
             dest='f1_score',\
             action='store_true',
-            help="""if pass as params will compute f1_score on validation set
+            help="""if pass as params will compute f1_score on vaslidation set
                     validate must be pass as params to show f1_score""")
     parsed_args = parser.parse_args()
     if parsed_args.data_path is None:

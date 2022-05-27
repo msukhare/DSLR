@@ -55,7 +55,7 @@ class LogisticReg:
     def eval(self, X, Y):
         pass
 
-    def get_batch(X, Y):
+    def get_batch(self, X, Y):
         i = 0
         while (i < X.shape[0]):
             yield X[i: i + self.batch_size], Y[i: i + self.batch_size]
@@ -72,7 +72,8 @@ class LogisticReg:
         for epoch in range(self.epochs):
             global_loss = 0
             training_process = ""
-            for i, X_batch, Y_batch in enumerate(self.get_batch(X, Y)):
+            iter_ = 0
+            for X_batch, Y_batch in self.get_batch(X, Y):
                 self.weights, loss = self.kernel.infer_on_batch(X_batch,\
                                                                 Y_batch,\
                                                                 self.classes,\
@@ -81,7 +82,8 @@ class LogisticReg:
                                                                 self.regularization,\
                                                                 self.optimizer)
                 global_loss += loss
-            training_process += "%d/%d loss train is equal to %f" %(epoch, self.epochs, global_loss / i)
+                iter_ += 1
+            training_process += "%d/%d loss train is equal to %f" %(epoch, self.epochs, global_loss / iter_)
             if self.validate is True:
                 training_process += "; loss val is equal to %f" %(loss_val)
                 if self.accuracy is True:

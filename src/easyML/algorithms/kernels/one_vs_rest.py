@@ -7,7 +7,7 @@ from ..optimizers import compute_dweights,\
 
 class OVR:
 
-    def transform_y(Y):
+    def transform_y(self, Y):
         labels = np.sort(np.unique(np.asarray(Y)))
         new_Y = np.zeros((Y.shape[0], labels.shape[0]))
         for i in range(Y.shape[0]):
@@ -15,19 +15,19 @@ class OVR:
         return labels, new_Y
 
     def init_weights(self, weights, classes, X):
-        if weights is None or weights.shape[0] != X.shape[1] or\
-            weights.shape[1] != classes.shape[0]:
-            return np.zeros((X.shape[1], classes.shape[0]))
+        if weights is None or weights.shape[1] != X.shape[1] or\
+            weights.shape[0] != classes.shape[0]:
+            return np.zeros((classes.shape[0], X.shape[1]))
         return weights
 
     def infer_on_batch(self, X, Y, classes, weights, lr, regularization, optimizer):
         global_loss = 0
         for index, lab in enumerate(classes):
             forward = sigmoid(X, weights[index])
-            global_loss += binary_cross_entropy(Y[:, index: index + 1])
-            DW = compute_dweights(X, forward, Y[:, index: index + 1])
+            global_loss += binary_cross_entropy(Y[:, index: index + 1], forward)[0]
+            DW = compute_dweights(X, forward, Y[:, index: index + 1].reshape(Y.shape[0]))
             weights[index] = gradient_descent(weights[index], DW, lr)
-        return weights, loss / classes.shape[0]
+        return weights, global_loss / classes.shape[0]
 
     def predict_proba(self, X, classes, weights):
         predicted_proba = []
