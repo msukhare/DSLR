@@ -17,12 +17,12 @@ def read_data_csv_cls(path_to_data, train=False, seed=423):
     labels = None
     if data.empty is True:
         raise Exception('%s is empty' %path_to_data)
-    data = data.sample(frac=1, random_state=seed).reset_index(drop=True)
     if train is True:
+        data = data.sample(frac=1, random_state=seed).reset_index(drop=True)
         labels = {lab: i for i, lab in enumerate(sorted(list(set(data['Hogwarts House']))))}
         Y = np.asarray(data['Hogwarts House'].map(labels))
     data['Defense Against the Dark Arts'] = replace_nan_by_correlated_value(data['Defense Against the Dark Arts'].copy(deep=True), data['Astronomy'])
     data = data.drop(['Best Hand', 'Arithmancy', 'Care of Magical Creatures', 'Astronomy', 'Hogwarts House', 'First Name', 'Last Name', 'Birthday', 'Index'], inplace=False, axis=1).reset_index(drop=True)
     for column in data:
         data[column] = replace_nan_by_mean(data[column].copy(deep=True))
-    return np.asarray(data), Y
+    return np.asarray(data), Y, labels

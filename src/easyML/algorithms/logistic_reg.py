@@ -49,8 +49,9 @@ class LogisticReg:
     def predict_proba(self, X):
         pass
 
-    def predict_proba(self, X):
-        pass
+    def predict(self, X):
+        X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
+        return self.kernel.predict(X, self.classes, self.weights)
 
     def eval(self, X, Y):
         pass

@@ -31,13 +31,13 @@ class OVR:
 
     def predict_proba(self, X, classes, weights):
         predicted_proba = []
-        for index, lab in classes:
-            predicted_proba.append(sigmoid(X, weights[index]))
+        for index, lab in enumerate(classes):
+            predicted_proba.append(np.expand_dims(sigmoid(X, weights[index]), axis=1))
         return np.concatenate(predicted_proba, axis=1)
 
-    def predict(sefl, X, classes, weights):
+    def predict(self, X, classes, weights):
         predicted_class = []
-        predicted_proba = self.predicted_proba(X, classes, weights)
-        for prediction in predict_proba:
+        predicted_proba = self.predict_proba(X, classes, weights)
+        for prediction in predicted_proba:
             predicted_class.append(classes[np.argmax(prediction)])
-        return prediction
+        return predicted_class

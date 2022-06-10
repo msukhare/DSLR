@@ -168,7 +168,7 @@ from utils import read_data_csv_cls
 
 def main(args):
     try:
-        X, Y = read_data_csv_cls(args.data_path, train=True)
+        X, Y, labels = read_data_csv_cls(args.data_path, train=True)
     except Exception as error:
         sys.exit('Error: ' + str(error))
     X, params_to_save = scaling_features(X, None, args.type_of_features_scaling)
@@ -187,15 +187,18 @@ def main(args):
                                 args.precision,\
                                 args.recall,\
                                 args.f1_score)
-
-    classificator.fit(X, Y)
-
     try:
         classificator.fit(X, Y)
     except Exception as error:
         sys.exit('Error:' + str(error))
     if args.features_importance is True:
         pass
+    X, Y, _ = read_data_csv_cls('../dataset_test.csv')
+    X, _ = scaling_features(X, params_to_save, args.type_of_features_scaling)
+    Y_pred = classificator.predict(X)
+    print("Index,Hogwarts House")
+    for i, ele in enumerate(Y_pred):
+        print("%d,%s" %(i, list(labels.keys())[ele]))
     classificator.save_weights(args.file_where_store_weights, params_to_save)
 
 if __name__ == "__main__":
