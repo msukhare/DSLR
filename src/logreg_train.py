@@ -193,12 +193,6 @@ def main(args):
         sys.exit('Error:' + str(error))
     if args.features_importance is True:
         pass
-    X, Y, _ = read_data_csv_cls('../dataset_test.csv')
-    X, _ = scaling_features(X, params_to_save, args.type_of_features_scaling)
-    Y_pred = classificator.predict(X)
-    print("Index,Hogwarts House")
-    for i, ele in enumerate(Y_pred):
-        print("%d,%s" %(i, list(labels.keys())[ele]))
     classificator.save_weights(args.file_where_store_weights, params_to_save)
 
 if __name__ == "__main__":
