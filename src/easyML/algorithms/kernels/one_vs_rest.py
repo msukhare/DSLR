@@ -20,19 +20,10 @@ class OVR:
             return np.zeros((classes.shape[0], X.shape[1]))
         return weights
 
-    def infer_on_batch(self, X, Y, classes, weights, lr, regularization, optimizer):
-        global_loss = 0
-        for index, lab in enumerate(classes):
-            forward = sigmoid(X, weights[index])
-            global_loss += binary_cross_entropy(Y[:, index: index + 1], forward)[0]
-            DW = compute_dweights(X, forward, Y[:, index: index + 1].reshape(Y.shape[0]))
-            weights[index] = gradient_descent(weights[index], DW, lr)
-        return weights, global_loss / classes.shape[0]
-
     def predict_proba(self, X, classes, weights):
         predicted_proba = []
         for index, lab in enumerate(classes):
-            predicted_proba.append(np.expand_dims(sigmoid(X, weights[index]), axis=1))
+            predicted_proba.append(np.expand_dims(sigmoid(-X.dot(weights[index])), axis=1))
         return np.concatenate(predicted_proba, axis=1)
 
     def predict(self, X, classes, weights):
@@ -41,3 +32,21 @@ class OVR:
         for prediction in predicted_proba:
             predicted_class.append(classes[np.argmax(prediction)])
         return predicted_class
+
+    def infer_on_batch(self, X, Y, classes, weights, lr, regularization, optimizer):
+        global_loss = 0
+        for index, lab in enumerate(classes):
+            forward = sigmoid(-X.dot(weights[index]))
+            global_loss += binary_cross_entropy(Y[:, index: index + 1], forward)[0]
+            DW = compute_dweights(X, forward, Y[:, index: index + 1].reshape(Y.shape[0]))
+            weights[index] = gradient_descent(weights[index], DW, lr)
+        return weights, global_loss / classes.shape[0]
+
+    def eval_on_batch(X, Y, classes, weights, regularization):
+        global_loss = 0
+        y_pred = []
+        for index, lab in enumerate(classes):
+            forward = sigmoid(-X.dot(weights[index]))
+            y_pred.append(np.expand_dims(forward, axis=1))
+            global_loss += binary_cross_entropy(Y[:, index: index + 1], forward)[0]
+        return y_pred, global_loss / classes.shape[0]

@@ -137,13 +137,13 @@ def write_thetas_in_file(thetas):
     for i in range(thetas.shape[0]):
         file.writerow(thetas[i])
 
-def check_argv():
-    if (len(sys.argv) <= 1):
-        sys.exit("Need file name with data")
-    if (len(sys.argv) >= 3):
-        sys.exit("too much arguments")
-    if (sys.argv[1] != "dataset_train.csv"):
-        sys.exit("file must be dataset_train.csv")
+# def check_argv():
+#     if (len(sys.argv) <= 1):
+#         sys.exit("Need file name with data")
+#     if (len(sys.argv) >= 3):
+#         sys.exit("too much arguments")
+#     if (sys.argv[1] != "dataset_train.csv"):
+#         sys.exit("file must be dataset_train.csv")
 
 
 def main_2(cc):
@@ -193,7 +193,14 @@ def main(args):
         sys.exit('Error:' + str(error))
     if args.features_importance is True:
         pass
-    classificator.save_weights(args.file_where_store_weights, params_to_save)
+    classificator.save_weights(args.file_where_store_weights, params_to_save, labels)
+    #X_test, __, _ = read_data_csv_cls("../dataset_test.csv", train=False)
+    #X_test, params_to_save = scaling_features(X_test, params_to_save, args.type_of_features_scaling)
+    #print("Index,Hogwarts House")
+    #for index, ele in enumerate(classificator.predict(X_test)):
+    #    for key in labels.keys():
+    #        if labels[key] == ele:
+    #            print("%d,%s" %(index, key))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -211,7 +218,7 @@ if __name__ == "__main__":
             type=str,\
             default="OVR",\
             const="OVR",\
-            choices=['OVR', 'OVO', 'MULTINOMIAL'],\
+            choices=['OVR', 'MULTINOMIAL'],\
             help="""correspond to kernel to use during training.
                     By default OVR""")
     parser.add_argument('--optimizer',\
