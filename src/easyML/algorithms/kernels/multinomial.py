@@ -39,7 +39,7 @@ class Multinomial:
         DW = compute_dweights(X, forward, Y).T
         return gradient_descent(weights, DW, lr), loss
 
-    def eval_on_batch(X, Y, classes, weights, regularization):
+    def eval_on_batch(self, X, Y, classes, weights, regularization):
         y_pred = softmax(weights.dot(X.T)).T
-        loss = categorical_cross_entropy(Y, y_pred)
+        global_loss = categorical_cross_entropy(Y, y_pred)
         return y_pred, global_loss
