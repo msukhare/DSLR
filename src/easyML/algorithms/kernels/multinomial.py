@@ -42,4 +42,4 @@ class Multinomial:
     def eval_on_batch(self, X, Y, classes, weights, regularization):
         y_pred = softmax(weights.dot(X.T)).T
         global_loss = categorical_cross_entropy(Y, y_pred)
-        return y_pred, global_loss
+        return np.argmax(y_pred, axis=1), global_loss

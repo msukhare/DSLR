@@ -84,9 +84,9 @@ class LogisticReg:
             global_loss += loss
             iter_ += 1
             y += list(np.argmax(Y_batch, axis=1))
-            y_pred += list(np.argmax(predicted_y, axis=1))
+            y_pred += list(predicted_y)
             for i, ele in enumerate(predicted_y):
-                confusion_matrix[np.argmax(Y_batch[i])][np.argmax(ele)] += 1
+                confusion_matrix[np.argmax(Y_batch[i])][ele] += 1
         print("accuracy sklearn :", sklearn.metrics.accuracy_score(y, y_pred))
         print("precision sklearn micro :", sklearn.metrics.precision_score(y, y_pred, average='micro'))
         print("recall sklearn micro :", sklearn.metrics.recall_score(y, y_pred, average='micro'))

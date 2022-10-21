@@ -42,11 +42,11 @@ class OVR:
             weights[index] = gradient_descent(weights[index], DW, lr)
         return weights, global_loss / classes.shape[0]
 
-    def eval_on_batch(X, Y, classes, weights, regularization):
+    def eval_on_batch(self, X, Y, classes, weights, regularization):
         global_loss = 0
         y_pred = []
         for index, lab in enumerate(classes):
             forward = sigmoid(-X.dot(weights[index]))
             y_pred.append(np.expand_dims(forward, axis=1))
             global_loss += binary_cross_entropy(Y[:, index: index + 1], forward)[0]
-        return y_pred, global_loss / classes.shape[0]
+        return np.argmax(np.concatenate(y_pred, axis=1), axis=1), global_loss / classes.shape[0]
