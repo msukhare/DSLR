@@ -4,6 +4,8 @@ from ..activation_functions import sigmoid
 from ..cost_functions import binary_cross_entropy
 from ..optimizers import compute_dweights,\
                         gradient_descent
+from ..regularization import l2_cost_fct,\
+                            l2_gradient
 
 class OVR:
 
@@ -33,20 +35,27 @@ class OVR:
             predicted_class.append(classes[np.argmax(prediction)])
         return predicted_class
 
-    def infer_on_batch(self, X, Y, classes, weights, lr, regularization, optimizer):
+    def infer_on_batch(self, X, Y, classes, weights, lr, optimizer, l2, lambda_value):
         global_loss = 0
         for index, lab in enumerate(classes):
             forward = sigmoid(-X.dot(weights[index]))
-            global_loss += binary_cross_entropy(Y[:, index: index + 1], forward)[0]
+            loss = binary_cross_entropy(Y[:, index: index + 1], forward)[0]
             DW = compute_dweights(X, forward, Y[:, index: index + 1].reshape(Y.shape[0]))
             weights[index] = gradient_descent(weights[index], DW, lr)
+            if l2 is True:
+                loss += l2_cost_fct(lambda_value, weights[index, 1: ], X.shape[0])
+                weights[index, 1:] += l2_gradient(lambda_value, weights[index, 1: ], X.shape[0])
+            global_loss += loss
         return weights, global_loss / classes.shape[0]
 
-    def eval_on_batch(self, X, Y, classes, weights, regularization):
+    def eval_on_batch(self, X, Y, classes, weights, l2, lambda_value):
         global_loss = 0
         y_pred = []
         for index, lab in enumerate(classes):
             forward = sigmoid(-X.dot(weights[index]))
             y_pred.append(np.expand_dims(forward, axis=1))
-            global_loss += binary_cross_entropy(Y[:, index: index + 1], forward)[0]
+            loss = binary_cross_entropy(Y[:, index: index + 1], forward)[0]
+            if l2 is True:
+                loss += l2_cost_fct(lambda_value, weights[index][1: ], X.shape[0])
+            global_loss += loss
         return np.argmax(np.concatenate(y_pred, axis=1), axis=1), global_loss / classes.shape[0]

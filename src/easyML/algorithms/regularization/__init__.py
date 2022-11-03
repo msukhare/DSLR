@@ -1,2 +1,2 @@
-from .l1_reg import l1
-from .l2_reg import l2
+from .lnorm import l2_cost_fct,\
+                    l2_gradient

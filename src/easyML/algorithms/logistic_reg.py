@@ -15,7 +15,8 @@ class LogisticReg:
     def __init__(self,\
                 kernel='OVR',\
                 optimizer='gradient_descent',\
-                regularization=None,\
+                l2=False,\
+                lambda_value=0.01,\
                 lr=0.01,\
                 epochs=100,\
                 batch_size=None,\
@@ -33,7 +34,8 @@ class LogisticReg:
             raise Exception("%s is not a valide kernel" %kernel)
         self.kernel = KERNELS[kernel]
         self.optimizer = optimizer
-        self.regularization = regularization
+        self.l2 = l2
+        self.lambda_value = lambda_value
         self.lr = lr
         self.epochs = epochs
         self.batch_size = batch_size
@@ -66,9 +68,6 @@ class LogisticReg:
             yield X[i:], Y[i:]
 
     def evaluate_training(self, X, Y):
-        y_pred = [] # TO DEL
-        y = [] # TO DEL
-
         global_loss = 0
         iter_ = 0
         confusion_matrix = np.zeros((self.classes.shape[0], self.classes.shape[0]))
@@ -80,22 +79,12 @@ class LogisticReg:
                                                         Y_batch,\
                                                         self.classes,\
                                                         self.weights,\
-                                                        self.regularization)
+                                                        self.l2,\
+                                                        self.lambda_value)
             global_loss += loss
             iter_ += 1
-            y += list(np.argmax(Y_batch, axis=1))
-            y_pred += list(predicted_y)
             for i, ele in enumerate(predicted_y):
                 confusion_matrix[np.argmax(Y_batch[i])][ele] += 1
-        print("accuracy sklearn :", sklearn.metrics.accuracy_score(y, y_pred))
-        print("precision sklearn micro :", sklearn.metrics.precision_score(y, y_pred, average='micro'))
-        print("recall sklearn micro :", sklearn.metrics.recall_score(y, y_pred, average='micro'))
-        print("f1 score sklearn micro:", sklearn.metrics.f1_score(y, y_pred, average='micro'))
-        
-        print("precision sklearn macro :", sklearn.metrics.precision_score(y, y_pred, average='macro'))
-        print("recall sklearn macro :", sklearn.metrics.recall_score(y, y_pred, average='macro'))
-        print("f1 score sklearn macro:", sklearn.metrics.f1_score(y, y_pred, average='macro'))
-        print("\n\n")
         return confusion_matrix, global_loss / iter_
 
     def fit(self, X, Y):
@@ -104,7 +93,7 @@ class LogisticReg:
         X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
         self.classes, Y = self.kernel.transform_y(Y)
         self.weights = self.kernel.init_weights(self.weights, self.classes, X)
-        if self.validate is True or self.early_stoping is True:
+        if self.validate is True or self.early_stopping is True:
             X_train, X_val, Y_train, Y_val = split_data(X, Y, self.validation_fraction)
             #confusion_matrix, best_loss_val = self.evaluate_training(X_val, Y_val)
         else:
@@ -122,11 +111,12 @@ class LogisticReg:
                                                                 self.classes,\
                                                                 self.weights,\
                                                                 self.lr,\
-                                                                self.regularization,\
-                                                                self.optimizer)
+                                                                self.optimizer,\
+                                                                self.l2,\
+                                                                self.lambda_value)
                 global_loss += loss
                 iter_ += 1
-            training_process += "%d/%d loss train is equal to %f" %(epoch, self.epochs, global_loss / iter_)
+            training_process += "epoch %d/%d epochs loss train is equal to %f" %(epoch, self.epochs, global_loss / iter_)
             if self.validate is True or self.early_stopping is True:
                 confusion_matrix, loss_val = self.evaluate_training(X_val, Y_val)
                 if self.early_stopping is True:
@@ -151,7 +141,7 @@ class LogisticReg:
                                                                                     self.average))
             print(training_process)
 
-    def features_importance(self, columns):
+    def features_importance(self, labels_names, features_names, number_features_max):
         pass
 
     def save_weights(self, path_to_where_save, params_scaling, labels):

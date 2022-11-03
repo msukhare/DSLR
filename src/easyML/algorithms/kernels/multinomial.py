@@ -4,7 +4,8 @@ from ..activation_functions import softmax
 from ..cost_functions import categorical_cross_entropy
 from ..optimizers import compute_dweights,\
                         gradient_descent
-
+from ..regularization import l2_cost_fct,\
+                            l2_gradient
 class Multinomial:
 
     def transform_y(self, Y):
@@ -33,13 +34,19 @@ class Multinomial:
             predicted_class.append(classes[np.argmax(prediction)])
         return predicted_class
 
-    def infer_on_batch(self, X, Y, classes, weights, lr, regularization, optimizer):
+    def infer_on_batch(self, X, Y, classes, weights, lr, optimizer, l2, lambda_value):
         forward = softmax(weights.dot(X.T)).T
         loss = categorical_cross_entropy(Y, forward)
         DW = compute_dweights(X, forward, Y).T
-        return gradient_descent(weights, DW, lr), loss
+        weights = gradient_descent(weights, DW, lr)
+        if l2 is True:
+            loss += l2_cost_fct(lambda_value, weights[:, 1: ], X.shape[0])
+            weights[:, 1: ] += l2_gradient(lambda_value, weights[:, 1: ], X.shape[0]).T
+        return weights, loss
 
-    def eval_on_batch(self, X, Y, classes, weights, regularization):
+    def eval_on_batch(self, X, Y, classes, weights, l2, lambda_value):
         y_pred = softmax(weights.dot(X.T)).T
         global_loss = categorical_cross_entropy(Y, y_pred)
+        if l2 is True:
+            global_loss += l2_cost_fct(lambda_value, weights[:, 1:], X.shape[0])
         return np.argmax(y_pred, axis=1), global_loss
