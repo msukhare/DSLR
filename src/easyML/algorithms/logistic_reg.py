@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 import os
-import sklearn.metrics
+import matplotlib.pyplot as plt
 
 from .kernels import KERNELS
 from ..data_managment import split_data
@@ -142,7 +142,17 @@ class LogisticReg:
             print(training_process)
 
     def features_importance(self, labels_names, features_names, number_features_max):
-        pass
+        weights = np.abs(self.weights)
+        for key in labels_names.keys():
+            values, feats = [], []
+            for value, feat in sorted(list(zip(weights[labels_names[key]], features_names)), key=lambda tup: tup[0], reverse=True)[0: number_features_max]:
+                values.append(value)
+                feats.append(feat)
+            plt.bar(feats, values, width=0.5)
+            plt.ylabel("magnitude")
+            plt.xlabel("features")
+            plt.title("features importance for %s" %key)
+            plt.show()
 
     def save_weights(self, path_to_where_save, params_scaling, labels):
         pass

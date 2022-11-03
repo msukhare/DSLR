@@ -9,7 +9,7 @@ from utils import read_data_csv_cls
 
 def main(args):
     try:
-        X, Y, labels = read_data_csv_cls(args.data_path, train=True)
+        X, Y, labels, columns_name = read_data_csv_cls(args.data_path, train=True)
     except Exception as error:
         sys.exit('Error: ' + str(error))
     X, params_to_save = scaling_features(X, None, args.type_of_features_scaling)
@@ -37,7 +37,7 @@ def main(args):
     if args.feat_importance is True:
         if args.type_of_features_scaling != 'standardization':
             print("Warning: data must be standardized before using features importance")
-        classificator.feat_importance(labels, columns_names, args.nb_feat_importance_show)     
+        classificator.features_importance(labels, columns_name, args.nb_feat_importance_show)     
     classificator.save_weights(args.file_where_store_weights, params_to_save, labels)
 
 if __name__ == "__main__":
@@ -144,8 +144,8 @@ if __name__ == "__main__":
     parser.add_argument('--nb_feat_importance_show',\
                         nargs='?',\
                         type=int,\
-                        default=1,\
-                        const=1,\
+                        default=3,\
+                        const=3,\
                         help="""correspond to numbers features importance to plot.
                                 By default 1""")
     parser.add_argument('--validate',\
