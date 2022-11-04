@@ -1,52 +1,54 @@
-import pandas as pd
-import numpy as np
-from read_and_complete_data import read_file
-from logreg_train import predict_Y
-import csv
+import os
 import sys
+import argparse
 
-def read_thetas():
+from easyML import LogisticReg,\
+                    scaling_features,\
+                    split_data
+from utils import read_data_csv_cls
+
+def main(args):
     try:
-        thetas = pd.read_csv("thetas.csv")
-    except:
-        sys.exit("thetas.csv doesn't exist, use logreg_trasin.py create it")
-    thetas = thetas.iloc[:]
-    thetas = np.array(thetas.values, dtype=float)
-    return (thetas)
+        classificator = LogisticReg()
+        params_scaling, labels = classificator.load_weights(args.weights_file)
+        data = read_data_csv_cls(args.data_path)
+        data, __ = scaling_features(data[0], params_scaling)
+        Y_pred = classificator.predict(data)
+    except Exception as error:
+        sys.exit('Error: ' + str(error))
+    with open(args.path_predictions, 'w') as fd:
+        fd.write('Index,Hogwarts House\n')
+        for index, ele in enumerate(Y_pred):
+            fd.write("%d,%s\n" %(index, list(labels.keys())[list(labels.values()).index(ele)]))
 
-def write_pred_in_file(pred_Y):
-    try:
-        file = csv.writer(open("house.csv", "w"), delimiter=',',\
-                quoting=csv.QUOTE_MINIMAL)
-    except:
-        sys.exit("fail to create house.csv")
-    file.writerow(["Index", "Hogwarts House"])
-    for i in range(pred_Y.shape[0]):
-        if (pred_Y[i] == 1):
-            name_house = "Gryffindor"
-        elif (pred_Y[i] == 2):
-            name_house = "Slytherin"
-        elif (pred_Y[i] == 3):
-            name_house = "Ravenclaw"
-        elif (pred_Y[i] == 4):
-            name_house = "Hufflepuff"
-        file.writerow([i, name_house])
-
-def check_argv():
-    if (len(sys.argv) <= 1):
-        sys.exit("Need name file")
-    if (len(sys.argv) >= 3):
-        sys.exit("too much file")
-    if (sys.argv[1] != "dataset_test.csv"):
-        sys.exit("the name of file must be dataset_test.csv")
-
-def main():
-    check_argv()
-    thetas = read_thetas()
-    X = read_file("predict", "dataset_train.csv", sys.argv[1])
-    X = np.c_[np.ones((X.shape[0], 1), dtype=float), X]
-    pred_Y = predict_Y(X, thetas, thetas.shape[0])
-    write_pred_in_file(pred_Y)
-
-if (__name__ == "__main__"):
-    main()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('data_path',\
+                        nargs='?',\
+                        type=str,\
+                        help="""correspond to path of csv file""")
+    parser.add_argument('path_predictions',\
+                        nargs='?',\
+                        type=str,\
+                        help="""correspond to path where store predictions on dataset""")
+    parser.add_argument('weights_file',\
+                        nargs='?',\
+                        type=str,\
+                        help="""correspond to path where stored weights after training and
+                                informations about pipeline""")
+    parsed_args = parser.parse_args()
+    if parsed_args.data_path is None:
+        sys.exit("Error: missing name of CSV data to use")
+    if os.path.exists(parsed_args.data_path) is False:
+        sys.exit("Error: %s doesn't exists" %parsed_args.data_path)
+    if os.path.isfile(parsed_args.data_path) is False:
+        sys.exit("Error: %s must be a file" %parsed_args.data_path)
+    if parsed_args.path_predictions is None:
+        sys.exit("Error: missing name of CSV data to use")
+    if parsed_args.weights_file is None:
+        sys.exit("Error: missing name of CSV data to use")
+    if os.path.exists(parsed_args.weights_file) is False:
+        sys.exit("Error: %s doesn't exists" %parsed_args.weights_file)
+    if os.path.isfile(parsed_args.weights_file) is False:
+        sys.exit("Error: %s must be a file" %parsed_args.weights_file)
+    main(parsed_args)
