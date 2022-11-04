@@ -1,94 +1,48 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    histogram.py                                       :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2018/10/29 19:09:25 by msukhare          #+#    #+#              #
-#    Updated: 2018/10/30 04:55:36 by msukhare         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 import sys
-import numpy as np
+import argparse
 
-def read_file():
+LABELS = ["Gryffindor", "Slytherin", "Hufflepuff", "Ravenclaw"]
+COLORS = ['red', 'green', 'yellow', 'blue']
+ALPHA = [0.4, 0.5, 0.5, 0.3]
+
+def read_file(data_path):
+    data = pd.read_csv(data_path)
+    if data.empty is True:
+        raise Exception('%s is empty' %data_path)
+    data = data.fillna(value={'Arithmancy': data['Arithmancy'].mean()}, inplace=False)
+    data = data.fillna(value={"Care of Magical Creatures": data["Care of Magical Creatures"].mean()}, inplace=False)
+    return data
+
+def show_homogenous_feat(data, feat_name):
+    for idx, label in enumerate(LABELS):
+        to_show = data[data['Hogwarts House'] == label]
+        plt.hist(to_show[feat_name], bins='auto', facecolor=COLORS[idx], alpha=ALPHA[idx], label=label)
+    plt.legend()
+    plt.title("Homogenous feature %s" %feat_name)
+    plt.show()
+
+def main(args):
     try:
-        data = pd.read_csv(sys.argv[1])
-    except:
-        sys.exit("File doesn't exist")
-    data = data.drop(['First Name', 'Last Name', 'Birthday', 'Index'], axis=1)
-    data['Best Hand'] = data['Best Hand'].map({'Right': 0, 'Left': 1})
-    for key in data:
-        if (key != "Hogwarts House"):
-            data.fillna(value={key: data[key].mean()}, inplace=True)
-    return (data)
-
-def split_data_by_house(data, key):
-    frst_h = []
-    sec_h = []
-    th_h = []
-    four_h = []
-    for i in range(data[key].shape[0]):
-        if (pd.notna(data[key][i])):
-            if (data['Hogwarts House'][i] == "Gryffindor"):
-                frst_h.append(data[key][i])
-            elif (data['Hogwarts House'][i] == "Slytherin"):
-                sec_h.append(data[key][i])
-            elif (data['Hogwarts House'][i] == "Hufflepuff"):
-                th_h.append(data[key][i])
-            else:
-                four_h.append(data[key][i])
-    return (frst_h, sec_h, th_h, four_h)
-
-def show_histogramme(data):
-    f, axs = plt.subplots(2, 7, figsize=(18, 14))
-    i = 0
-    j = 0
-    for key in data:
-        if (j == 7):
-            j = 0
-            i += 1
-        if (key != "Hogwarts House"):
-            first_h, sec_h, th_h, four_h = split_data_by_house(data, key)
-            axs[i, j].set_title(key)
-            axs[i, j].hist(first_h, bins='auto', facecolor='red', alpha = 0.4, label='Gryffindor')
-            axs[i, j].hist(sec_h, bins='auto', facecolor='green', alpha = 0.5, label='Slytherin')
-            axs[i, j].hist(th_h, bins='auto', facecolor='yellow', alpha = 0.5, label='Hufflepuff')
-            axs[i, j].hist(four_h, bins='auto', facecolor='blue', alpha = 0.3, label='Ravenclaw')
-            axs[i, j].legend()
-            j += 1
-    plt.show()
-
-def show_most_homogenous_feat(data):
-    f, axs = plt.subplots(2, 1, figsize=(18, 14))
-    first_h, sec_h, th_h, four_h = split_data_by_house(data, "Arithmancy")
-    axs[0].set_title("Most homogenous feature Arithmancy")
-    axs[0].hist(first_h, bins='auto', facecolor='red', alpha = 0.4, label='Gryffindor')
-    axs[0].hist(sec_h, bins='auto', facecolor='green', alpha = 0.5, label='Slytherin')
-    axs[0].hist(th_h, bins='auto', facecolor='yellow', alpha = 0.5, label='Hufflepuff')
-    axs[0].hist(four_h, bins='auto', facecolor='blue', alpha = 0.3, label='Ravenclaw')
-    axs[0].legend()
-    first_h, sec_h, th_h, four_h = split_data_by_house(data, "Care of Magical Creatures")
-    axs[1].set_title("Most homogenous feature Care of Magical Creatures")
-    axs[1].hist(first_h, bins='auto', facecolor='red', alpha = 0.4, label='Gryffindor')
-    axs[1].hist(sec_h, bins='auto', facecolor='green', alpha = 0.5, label='Slytherin')
-    axs[1].hist(th_h, bins='auto', facecolor='yellow', alpha = 0.5, label='Hufflepuff')
-    axs[1].hist(four_h, bins='auto', facecolor='blue', alpha = 0.3, label='Ravenclaw')
-    axs[1].legend()
-    plt.show()
-
-def main():
-    if (len(sys.argv) <= 1):
-        sys.exit("No name file")
-    if (len(sys.argv) >= 3):
-        sys.exit("too much file")
-    data = read_file()
-    show_histogramme(data)
-    show_most_homogenous_feat(data)
+        data = read_file(args.data_path)
+    except Exception as error:
+        sys.exit("%s" %str(error))
+    show_homogenous_feat(data, 'Arithmancy')
+    show_homogenous_feat(data, 'Care of Magical Creatures')
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('data_path',\
+                        nargs='?',\
+                        type=str,\
+                        help="""correspond to path of csv file""")
+    parsed_args = parser.parse_args()
+    if parsed_args.data_path is None:
+        sys.exit("Error: missing name of CSV data to use")
+    if os.path.exists(parsed_args.data_path) is False:
+        sys.exit("Error: %s doesn't exists" %parsed_args.data_path)
+    if os.path.isfile(parsed_args.data_path) is False:
+        sys.exit("Error: %s must be a file" %parsed_args.data_path)
+    main(parsed_args)

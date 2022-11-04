@@ -1,50 +1,51 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    pair_plot.py                                       :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2018/07/09 16:34:31 by msukhare          #+#    #+#              #
-#    Updated: 2018/10/30 04:55:34 by msukhare         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
+import os
 import sys
+import numpy as np
+import argparse
+import seaborn as sns
+import matplotlib
 
-def check_col_str(data):
-    for ele in data:
-        if (pd.notna(ele) and type(ele) is str):
-                return (1);
-    return (0)
+def replace_nan_by_mean(column):
+    index_nan = column.index[column.apply(np.isnan)]
+    column[index_nan] = np.mean(column)
+    return column
 
-def read_file():
-    try:
-        data = pd.read_csv(sys.argv[1])
-    except:
-        sys.exit("File doesn't exist")
-    data = data.drop(['First Name', 'Last Name', 'Birthday', 'Index'], axis=1)
-    data['Best Hand'] = data['Best Hand'].map({'Right': 0, 'Left': 1})
-    for key in data:
-        if (key != "Hogwarts House"):
-            data.fillna(value={key: data[key].mean()}, inplace=True)
-    return (data)
+def replace_nan_by_correlated_value(X, correlated):
+    max_value = np.max(X)
+    X /= max_value
+    correlated /= np.max(correlated)
+    index_nan = X.index[X.apply(np.isnan)]
+    X[index_nan] = correlated[index_nan]
+    return X * max_value
 
-def main():
-    if (len(sys.argv) <= 1):
-        sys.exit("No name file")
-    if (len(sys.argv) >= 3):
-        sys.exit("too much file")
-    data = read_file()
-    ##after see the pair plot, histogram, scatterplot i decied to move up best hand
-    ##, arytmencie, care of magic creature and astronomy
-    data = data.drop(['Best Hand', 'Astronomy', 'Arithmancy', 'Care of Magical Creatures'],\
-            axis=1)
+def read_file(path_to_data):
+    data = pd.read_csv(path_to_data)
+    data['Defense Against the Dark Arts'] = replace_nan_by_correlated_value(data['Astronomy'].copy(deep=True), data['Defense Against the Dark Arts'])
+    tmp = data['Hogwarts House']
+    data = data.drop(['Best Hand', 'Arithmancy', 'Care of Magical Creatures', 'Defense Against the Dark Arts', 'First Name', 'Last Name', 'Birthday', 'Index', 'Hogwarts House'], inplace=False, axis=1).reset_index(drop=True)
+    for column in data:
+        data[column] = replace_nan_by_mean(data[column].copy(deep=True))
+    data['Hogwarts House'] = tmp
+    return data
+
+def main(args):
+    data = read_file(args.data_path)
     sns.pairplot(data, hue="Hogwarts House")
     plt.show()
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('data_path',\
+                        nargs='?',\
+                        type=str,\
+                        help="""correspond to path of csv file""")
+    parsed_args = parser.parse_args()
+    if parsed_args.data_path is None:
+        sys.exit("Error: missing name of CSV data to use")
+    if os.path.exists(parsed_args.data_path) is False:
+        sys.exit("Error: %s doesn't exists" %parsed_args.data_path)
+    if os.path.isfile(parsed_args.data_path) is False:
+        sys.exit("Error: %s must be a file" %parsed_args.data_path)
+    main(parsed_args)
