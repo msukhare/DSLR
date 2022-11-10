@@ -5,7 +5,6 @@ import sys
 import numpy as np
 import argparse
 import seaborn as sns
-import matplotlib
 
 sns.set(rc={'figure.figsize':(11.7,8.27)})
 
@@ -36,7 +35,7 @@ def main(args):
     data = read_file(args.data_path)
     sns.pairplot(data, hue="Hogwarts House")
     plt.show()
-ls
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('data_path',\
