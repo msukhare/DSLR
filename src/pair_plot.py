@@ -7,6 +7,8 @@ import argparse
 import seaborn as sns
 import matplotlib
 
+sns.set(rc={'figure.figsize':(11.7,8.27)})
+
 def replace_nan_by_mean(column):
     index_nan = column.index[column.apply(np.isnan)]
     column[index_nan] = np.mean(column)
@@ -34,7 +36,7 @@ def main(args):
     data = read_file(args.data_path)
     sns.pairplot(data, hue="Hogwarts House")
     plt.show()
-
+ls
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('data_path',\
