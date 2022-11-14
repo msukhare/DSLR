@@ -32,7 +32,10 @@ def read_file(path_to_data):
     return data
 
 def main(args):
-    data = read_file(args.data_path)
+    try:
+        data = read_file(args.data_path)
+    except Exception as error:
+        sys.exit(str(error))
     sns.pairplot(data, hue="Hogwarts House")
     plt.show()
 

@@ -26,7 +26,10 @@ def show_the_same_feature(data):
     plt.show()
 
 def main(args):
-    data = read_file(args.data_path)
+    try:
+        data = read_file(args.data_path)
+    except Exception as error:
+        sys.exit(str(error))
     show_the_same_feature(data)
 
 if __name__ == "__main__":

@@ -1,100 +1,110 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    describe.py                                        :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: msukhare <marvin@42.fr>                    +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2018/07/10 11:14:18 by msukhare          #+#    #+#              #
-#    Updated: 2018/10/29 19:07:51 by msukhare         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 import pandas as pd
-import numpy as np
+import os
 import sys
+import numpy as np
+import argparse
+
 from math import sqrt
-from math import floor
-from math import ceil
-
-def check_col_str(data):
-    for ele in data:
-        if (pd.notna(ele) and type(ele) is str):
-                return (1);
-    return (0)
-
-def read_file():
-    try:
-        data = pd.read_csv(sys.argv[1])
-    except:
-        sys.exit("File doesn't exist")
-    keys = []
-    for key in data:
-        if (check_col_str(data[key])):
-            data.drop([key], axis = 1, inplace = True)
-        else:
-            keys.append(key)
-    data_describe = pd.DataFrame(0.000,\
-            index = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max'], columns = keys)
-    return (data, data_describe, keys)
 
 def ft_count(data):
     nb_ele = 0
     for ele in data:
-        if (pd.notna(ele)):
+        if pd.notna(ele) is True:
             nb_ele += 1
-    return (nb_ele)
+    return nb_ele
 
-def get_min_or_max(data, min_or_max):
-    i = 0
-    while (pd.isna(data[i])):
-        i += 1
-    mn_mx = data[i]
-    for ele in data:
-        if (min_or_max == 0 and mn_mx > ele):
-            mn_mx = ele
-        elif (min_or_max == 1 and mn_mx < ele):
-            mn_mx = ele
-    return (mn_mx)
+def ft_quantile(data, quant):
+    total = ft_count(data)
+    if total == 0:
+        return np.nan
+    sorted_data = np.sort(np.array(data.values, dtype=float))
+    h = (total - 1) * quant
+    h_down = np.floor(h)
+    return sorted_data[int(h_down)] + (h - h_down) * (sorted_data[int(np.ceil(h))] - sorted_data[int(h_down)])
 
-def ft_mean(data, total):
-    somme = 0
+def ft_mean(data):
+    somme = 0.0
+    total = float(ft_count(data))
+    if total == 0:
+        return np.nan
     for ele in data:
-        if (pd.notna(ele)):
+        if pd.notna(ele) is True:
             somme += ele
-    return (float(somme / total))
+    return float(somme / total)
 
-def ft_std(data, mean, total):
+def ft_std(data):
     to_div = 0
+    mean = ft_mean(data)
+    total = ft_count(data)
+    if total == 0:
+        return np.nan
     for ele in data:
-        if (pd.notna(ele)):
+        if pd.notna(ele):
             to_div += (ele - mean)**2
-    return (float(sqrt(to_div / (total - 1))))
+    return float(sqrt(to_div / (total - 1)))
 
-def ft_quantile(data, total, quant):
-    tmp = np.sort(np.array(data.values, dtype=float))
-    i = ceil(total * quant)
-    if (total % 2 != 0):
-        return (tmp[i])
-    return (float(tmp[i - 1] + ((tmp[i] - tmp[i - 1]) * (1 - quant))))
+def ft_min(data):
+    to_ret = None
+    for ele in data:
+        if pd.notna(ele) is True and\
+            (to_ret is None or ele < to_ret):
+            to_ret = ele
+    return to_ret
 
-def main():
-    if (len(sys.argv) <= 1):
-        sys.exit("No name file")
-    if (len(sys.argv) >= 3):
-        sys.exit("too much file")
-    data, data_describe, keys = read_file()
-    for key in keys:
-        data_describe[key]['count'] = ft_count(data[key])
-        data_describe[key]['min'] = get_min_or_max(data[key], 0)
-        data_describe[key]['max'] = get_min_or_max(data[key], 1)
-        data_describe[key]['mean'] = float(ft_mean(data[key], data_describe[key]['count']))
-        data_describe[key]['std'] = float(ft_std(data[key], data_describe[key]['mean'],\
-                data_describe[key]['count']))
-        data_describe[key]['25%'] = float(ft_quantile(data[key], data_describe[key]['count'], 0.25))
-        data_describe[key]['50%'] = float(ft_quantile(data[key], data_describe[key]['count'], 0.50))
-        data_describe[key]['75%'] = float(ft_quantile(data[key], data_describe[key]['count'], 0.75))
-    print(data_describe)
+def ft_max(data):
+    to_ret = None
+    for ele in data:
+        if pd.notna(ele) is True and\
+            (to_ret is None or ele > to_ret):
+            to_ret = ele
+    return to_ret
+
+def col_contains_str(data):
+    for ele in data:
+        if pd.notna(ele) is True and\
+            type(ele) is str:
+            return True
+    return False
+
+def read_file(data_path):
+    data = pd.read_csv(data_path)
+    if data.empty is True:
+        raise Exception('%s is empty' %data_path)
+    for key in data.keys():
+        if col_contains_str(data[key]) is True:
+            data.drop([key], axis=1, inplace=True)
+    return data
+
+def main(args):
+    try:
+        data = read_file(args.data_path)
+    except Exception as error:
+        sys.exit(str(error))
+    describer = pd.DataFrame(0.000,\
+                            index=['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max'],
+                            columns=list(data.keys()))
+    for key in data.keys():
+        describer[key]['count'] = ft_count(data[key])
+        describer[key]['min'] = ft_min(data[key])
+        describer[key]['max'] = ft_max(data[key])
+        describer[key]['mean'] = float(ft_mean(data[key]))
+        describer[key]['std'] = float(ft_std(data[key]))
+        describer[key]['25%'] = float(ft_quantile(data[key], 0.25))
+        describer[key]['50%'] = float(ft_quantile(data[key], 0.50))
+        describer[key]['75%'] = float(ft_quantile(data[key], 0.75))
+    print(describer)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('data_path',\
+                        nargs='?',\
+                        type=str,\
+                        help="""correspond to path of csv file""")
+    parsed_args = parser.parse_args()
+    if parsed_args.data_path is None:
+        sys.exit("Error: missing name of CSV data to use")
+    if os.path.exists(parsed_args.data_path) is False:
+        sys.exit("Error: %s doesn't exists" %parsed_args.data_path)
+    if os.path.isfile(parsed_args.data_path) is False:
+        sys.exit("Error: %s must be a file" %parsed_args.data_path)
+    main(parsed_args)
