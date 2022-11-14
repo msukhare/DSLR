@@ -34,7 +34,7 @@ class Multinomial:
             predicted_class.append(classes[np.argmax(prediction)])
         return predicted_class
 
-    def infer_on_batch(self, X, Y, classes, weights, lr, optimizer, l2, lambda_value):
+    def infer_on_batch(self, X, Y, classes, weights, lr, l2, lambda_value):
         forward = softmax(weights.dot(X.T)).T
         loss = categorical_cross_entropy(Y, forward)
         DW = compute_dweights(X, forward, Y).T

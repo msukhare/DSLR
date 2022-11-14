@@ -14,7 +14,6 @@ def main(args):
         sys.exit('Error: ' + str(error))
     X, params_to_save = scaling_features(X, None, args.type_of_features_scaling)
     classificator = LogisticReg(args.kernel,\
-                                args.optimizer,\
                                 args.l2,\
                                 args.learning_rate,\
                                 args.lambda_value,\
@@ -59,14 +58,6 @@ if __name__ == "__main__":
                         choices=['OVR', 'MULTINOMIAL'],\
                         help="""correspond to kernel to use during training.
                                 By default OVR""")
-    parser.add_argument('--optimizer',\
-                        nargs='?',\
-                        type=str,\
-                        default="gradient_descent",\
-                        const="gradient_descent",\
-                        choices=['gradient_descent', 'adam', 'momentum', 'RMSP'],\
-                        help="""correspond to optimizer to use.
-                                By default gradient descent""")
     parser.add_argument('--l2',\
                         dest='l2',\
                         action='store_true',

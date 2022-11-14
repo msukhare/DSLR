@@ -35,7 +35,7 @@ class OVR:
             predicted_class.append(classes[np.argmax(prediction)])
         return predicted_class
 
-    def infer_on_batch(self, X, Y, classes, weights, lr, optimizer, l2, lambda_value):
+    def infer_on_batch(self, X, Y, classes, weights, lr, l2, lambda_value):
         global_loss = 0
         for index, lab in enumerate(classes):
             forward = sigmoid(-X.dot(weights[index]))

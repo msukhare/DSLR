@@ -14,7 +14,6 @@ class LogisticReg:
 
     def __init__(self,\
                 kernel='OVR',\
-                optimizer='gradient_descent',\
                 l2=False,\
                 lambda_value=0.01,\
                 lr=0.01,\
@@ -33,7 +32,6 @@ class LogisticReg:
         if kernel not in KERNELS.keys():
             raise Exception("%s is not a valide kernel" %kernel)
         self.kernel = KERNELS[kernel]
-        self.optimizer = optimizer
         self.l2 = l2
         self.lambda_value = lambda_value
         self.lr = lr
@@ -112,7 +110,6 @@ class LogisticReg:
                                                                 self.classes,\
                                                                 self.weights,\
                                                                 self.lr,\
-                                                                self.optimizer,\
                                                                 self.l2,\
                                                                 self.lambda_value)
                 global_loss += loss
