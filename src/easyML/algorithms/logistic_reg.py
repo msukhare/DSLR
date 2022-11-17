@@ -92,7 +92,7 @@ class LogisticReg:
         self.weights = self.kernel.init_weights(self.weights, self.classes, X)
         if self.validate is True or\
             self.early_stopping is True:
-            X_train, X_val, Y_train, Y_val = split_data(X, Y, self.validation_fraction)
+            X_train, X_val, Y_train, Y_val = split_data(X, Y, 1 - self.validation_fraction)
             if self.early_stopping is True:
                 confusion_matrix, best_loss_val = self.evaluate_training(X_val, Y_val)
         else:
